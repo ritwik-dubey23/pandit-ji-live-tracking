@@ -8,3 +8,7 @@ build
 .idea
 .vscode
 *.log
+
+# Ignore old duplicate legacy folders
+backend/
+frontend/
