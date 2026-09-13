@@ -3,6 +3,7 @@ services:
   - type: web
     name: pandit-ji-backend
     env: node
+    plan: free
     rootDir: pandit-ji-backend
     buildCommand: npm install
     startCommand: npm start
