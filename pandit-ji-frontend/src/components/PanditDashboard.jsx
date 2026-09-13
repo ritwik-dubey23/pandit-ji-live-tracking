@@ -161,7 +161,8 @@ function PanditDashboard() {
             alert("New Pooja service added successfully!");
         } catch (error) {
             setSavingService(false);
-            alert("Failed to add service.");
+            console.error("Add Service Error:", error);
+            alert(error?.response?.data?.message || "Failed to add service. Please try again.");
         }
     };
 

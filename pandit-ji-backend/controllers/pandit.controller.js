@@ -160,10 +160,14 @@ export const addOrUpdateService = async (req, res) => {
 
         let imageUrl = "";
         if (req.file) {
-            const uploadResult = await cloudinary.uploader.upload(req.file.path, {
-                folder: "pandit_ji_services"
-            });
-            imageUrl = uploadResult.secure_url;
+            try {
+                const uploadResult = await cloudinary.uploader.upload(req.file.path, {
+                    folder: "pandit_ji_services"
+                });
+                imageUrl = uploadResult?.secure_url || "";
+            } catch (cloudErr) {
+                console.error("Cloudinary service image upload error:", cloudErr.message);
+            }
         }
 
         if (serviceId) {
