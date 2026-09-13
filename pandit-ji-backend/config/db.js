@@ -4,6 +4,9 @@ const connectDb = async () => {
     try {
         let rawUri = process.env.MONGO_URI || process.env.MONGODB_URI || process.env.MONGODB_URL || process.env.MONGO_URL || "";
         
+        // Strip leading "MONGODB_URI=" or "MONGO_URI=" if user pasted key name inside value box on Render
+        rawUri = rawUri.replace(/^(MONGODB_URI|MONGO_URI|MONGODB_URL|MONGO_URL)\s*=\s*/i, '');
+
         // Sanitize string: trim spaces, remove quotes if user pasted quotes on Render
         let mongoUri = rawUri.trim().replace(/^["']|["']$/g, '').trim();
 
@@ -20,7 +23,7 @@ const connectDb = async () => {
             mongoUri = "mongodb+srv://" + mongoUri;
         }
 
-        console.log(`[DB] Connecting to MongoDB Atlas... (${mongoUri.substring(0, 30)}...)`);
+        console.log(`[DB] Connecting to MongoDB Atlas... (${mongoUri.substring(0, 35)}...)`);
         const conn = await mongoose.connect(mongoUri, { dbName: "panditji" });
         console.log(`[DB SUCCESS] Connected to MongoDB - Host: ${conn.connection.host}, Database: ${conn.connection.name}`);
         return conn;
