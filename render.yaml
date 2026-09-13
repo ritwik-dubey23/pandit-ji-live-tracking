@@ -8,16 +8,13 @@ services:
     startCommand: npm start
     envVars:
       - key: PORT
-        value: 8000
+        value: "8000"
       - key: MONGO_URI
         sync: false
       - key: JWT_SECRET
         sync: false
       - key: FRONTEND_URL
-        fromService:
-          type: web
-          name: pandit-ji-frontend
-          property: url
+        sync: false
 
   # Frontend Static Site (Vite + React SPA)
   - type: web
@@ -32,7 +29,4 @@ services:
         destination: /index.html
     envVars:
       - key: VITE_SERVER_URL
-        fromService:
-          type: web
-          name: pandit-ji-backend
-          property: url
+        sync: false
