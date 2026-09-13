@@ -4,6 +4,16 @@ import bcrypt from "bcryptjs";
 import gentoken from "../utils/token.js";
 import { sendOtpMail } from "../utils/mail.js";
 
+const getCookieOptions = () => {
+    const isProduction = process.env.NODE_ENV === "production" || !!process.env.RENDER || !!process.env.VERCEL;
+    return {
+        secure: isProduction,
+        sameSite: isProduction ? "none" : "lax",
+        maxAge: 15 * 24 * 60 * 60 * 1000,
+        httpOnly: true
+    };
+};
+
 export const signUp = async (req, res) => {
     try {
         const { fullName, email, password, mobile, role } = req.body;
@@ -65,12 +75,7 @@ export const signUp = async (req, res) => {
 
         const token = await gentoken(user._id);
 
-        res.cookie("token", token, {
-            secure: false,
-            sameSite: "lax",
-            maxAge: 15 * 24 * 60 * 60 * 1000,
-            httpOnly: true
-        });
+        res.cookie("token", token, getCookieOptions());
 
         const userObj = user.toObject();
         delete userObj.password;
@@ -78,7 +83,7 @@ export const signUp = async (req, res) => {
         return res.status(201).json(userObj);
     } catch (error) {
         console.error("SignUp Error:", error);
-        return res.status(500).json({ message: "Internal server error during registration." });
+        return res.status(500).json({ message: "Registration error: " + (error.message || "Failed to create account.") });
     }
 };
 
@@ -98,12 +103,7 @@ export const signIn = async (req, res) => {
 
         const token = await gentoken(user._id);
 
-        res.cookie("token", token, {
-            secure: false,
-            sameSite: "lax",
-            maxAge: 15 * 24 * 60 * 60 * 1000,
-            httpOnly: true
-        });
+        res.cookie("token", token, getCookieOptions());
 
         const userObj = user.toObject();
         delete userObj.password;
@@ -117,7 +117,11 @@ export const signIn = async (req, res) => {
 
 export const signOut = async (req, res) => {
     try {
-        res.clearCookie("token");
+        const isProduction = process.env.NODE_ENV === "production" || !!process.env.RENDER || !!process.env.VERCEL;
+        res.clearCookie("token", {
+            secure: isProduction,
+            sameSite: isProduction ? "none" : "lax"
+        });
         return res.status(200).json({ message: "Logged out successfully." });
     } catch (error) {
         return res.status(500).json({ message: "Logout error." });
@@ -235,7 +239,6 @@ export const googleAuth = async (req, res) => {
         let user = await User.findOne({ email });
 
         if (!user) {
-            // Role Security Rule: Default new Google signups to "user" role strictly
             const defaultRole = "user";
             const randomPassword = Math.random().toString(36).slice(-10) + "Pj#1";
             const hashPassword = await bcrypt.hash(randomPassword, 10);
@@ -249,7 +252,6 @@ export const googleAuth = async (req, res) => {
                 firebaseUid: googleSub
             });
         } else {
-            // Existing user: Preserve existing role in MongoDB
             if (googleSub && !user.firebaseUid) {
                 user.firebaseUid = googleSub;
                 await user.save();
@@ -258,12 +260,7 @@ export const googleAuth = async (req, res) => {
 
         const jwtToken = await gentoken(user._id);
 
-        res.cookie("token", jwtToken, {
-            secure: false,
-            sameSite: "lax",
-            maxAge: 15 * 24 * 60 * 60 * 1000,
-            httpOnly: true
-        });
+        res.cookie("token", jwtToken, getCookieOptions());
 
         const userObj = user.toObject();
         delete userObj.password;
@@ -274,4 +271,3 @@ export const googleAuth = async (req, res) => {
         return res.status(500).json({ message: "Google authentication failed." });
     }
 };
-
