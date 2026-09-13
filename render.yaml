@@ -8,6 +8,8 @@ services:
     buildCommand: npm install
     startCommand: npm start
     envVars:
+      - key: NODE_VERSION
+        value: "20"
       - key: PORT
         value: "8000"
       - key: MONGO_URI
@@ -29,5 +31,7 @@ services:
         source: /*
         destination: /index.html
     envVars:
+      - key: NODE_VERSION
+        value: "20"
       - key: VITE_SERVER_URL
         sync: false
