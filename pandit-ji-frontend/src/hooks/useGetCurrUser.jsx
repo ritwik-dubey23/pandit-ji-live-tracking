@@ -10,9 +10,18 @@ const useGetCurrUser = () => {
     const dispatch = useDispatch();
 
     useEffect(() => {
+        const savedToken = localStorage.getItem("pandit_ji_token");
+        if (savedToken) {
+            axios.defaults.headers.common['Authorization'] = `Bearer ${savedToken}`;
+        }
+
         const fetchUser = async () => {
             try {
                 const res = await axios.get(`${serverUrl}/api/auth/me`, { withCredentials: true });
+                if (res.data && res.data.token) {
+                    localStorage.setItem("pandit_ji_token", res.data.token);
+                    axios.defaults.headers.common['Authorization'] = `Bearer ${res.data.token}`;
+                }
                 dispatch(setUserData(res.data));
 
                 // Join Socket room

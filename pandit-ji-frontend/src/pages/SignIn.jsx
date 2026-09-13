@@ -34,6 +34,10 @@ function SignInContent() {
                 password
             }, { withCredentials: true });
 
+            if (result.data?.token) {
+                localStorage.setItem("pandit_ji_token", result.data.token);
+                axios.defaults.headers.common['Authorization'] = `Bearer ${result.data.token}`;
+            }
             dispatch(setUserData(result.data));
             setLoading(false);
 

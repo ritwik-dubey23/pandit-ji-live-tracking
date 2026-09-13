@@ -79,6 +79,7 @@ export const signUp = async (req, res) => {
 
         const userObj = user.toObject();
         delete userObj.password;
+        userObj.token = token;
 
         return res.status(201).json(userObj);
     } catch (error) {
@@ -107,6 +108,7 @@ export const signIn = async (req, res) => {
 
         const userObj = user.toObject();
         delete userObj.password;
+        userObj.token = token;
 
         return res.status(200).json(userObj);
     } catch (error) {
@@ -264,6 +266,7 @@ export const googleAuth = async (req, res) => {
 
         const userObj = user.toObject();
         delete userObj.password;
+        userObj.token = jwtToken;
 
         return res.status(200).json(userObj);
     } catch (error) {
