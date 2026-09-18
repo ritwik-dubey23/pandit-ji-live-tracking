@@ -1,3 +1,4 @@
+import fs from "fs";
 import Pandit from "../models/pandit.model.js";
 import User from "../models/user.models.js";
 import Review from "../models/review.model.js";
@@ -292,45 +293,82 @@ export const updateProfilePhoto = async (req, res) => {
     try {
         const pandit = await Pandit.findOne({ user: req.userId });
         if (!pandit) {
-            return res.status(404).json({ message: "Pandit Ji profile not found" });
+            return res.status(404).json({ message: "Pandit Ji profile not found." });
         }
 
         let photoUrl = "";
+        let newPublicId = "";
+        const oldImageUrl = pandit.profileImage;
+
         if (req.file) {
             try {
-                if (pandit.profileImage) {
-                    await deleteCloudinaryImage(pandit.profileImage);
-                }
+                console.log(`[UPLOAD] Processing profile photo for user ${req.userId}: name=${req.file.originalname}, mimetype=${req.file.mimetype}, size=${req.file.size} bytes`);
+                
+                // 1. Upload NEW image FIRST
                 const uploadResult = await cloudinary.uploader.upload(req.file.path, {
                     folder: "pandit_ji_profile"
                 });
-                photoUrl = uploadResult?.secure_url || "";
+
+                if (!uploadResult || !uploadResult.secure_url) {
+                    throw new Error("Cloudinary did not return a valid secure_url.");
+                }
+
+                photoUrl = uploadResult.secure_url;
+                newPublicId = uploadResult.public_id;
+                console.log(`[UPLOAD SUCCESS] New Cloudinary image URL: ${photoUrl} (public_id: ${newPublicId})`);
+
+                // 2. Delete OLD image ONLY AFTER new upload succeeds
+                if (oldImageUrl && oldImageUrl !== photoUrl) {
+                    deleteCloudinaryImage(oldImageUrl).catch(err => {
+                        console.warn("[CLOUDINARY CLEANUP WARN] Failed to delete old image:", err.message);
+                    });
+                }
             } catch (cloudErr) {
-                console.error("Cloudinary profile upload error:", cloudErr.message);
-                return res.status(500).json({ message: "Cloudinary upload failed: " + cloudErr.message });
+                console.error("[CLOUDINARY ERROR] Profile upload failed:", cloudErr);
+                return res.status(500).json({
+                    message: `Cloudinary Upload Failed: ${cloudErr.message || "Failed to upload image to Cloudinary."}`
+                });
+            } finally {
+                // Clean up local temp file created by Multer
+                if (req.file && req.file.path && fs.existsSync(req.file.path)) {
+                    try {
+                        fs.unlinkSync(req.file.path);
+                    } catch (unlinkErr) {
+                        console.warn("[MULTER TEMP CLEANUP WARN]", unlinkErr.message);
+                    }
+                }
             }
         } else if (req.body.profileImage) {
-            if (pandit.profileImage && pandit.profileImage !== req.body.profileImage) {
-                await deleteCloudinaryImage(pandit.profileImage);
-            }
             photoUrl = req.body.profileImage;
+            if (oldImageUrl && oldImageUrl !== photoUrl) {
+                deleteCloudinaryImage(oldImageUrl).catch(err => console.warn(err.message));
+            }
         }
 
         if (!photoUrl) {
-            return res.status(400).json({ message: "No profile image provided or Cloudinary upload failed." });
+            return res.status(400).json({ message: "No profile image file was provided in the request." });
         }
 
-        // Strictly SINGLE profile photo policy
+        // 3. Update MongoDB documents (Pandit & User)
         pandit.profileImage = photoUrl;
         await pandit.save();
 
-        // Also update User profile document
         const updatedUser = await User.findByIdAndUpdate(req.userId, { profileImage: photoUrl }, { new: true });
 
-        return res.status(200).json({ message: "Profile photo updated successfully", pandit, user: updatedUser });
+        console.log(`[DB SUCCESS] Synced profileImage for Pandit ${pandit._id} and User ${req.userId}`);
+
+        return res.status(200).json({
+            message: "Profile photo updated successfully!",
+            pandit,
+            user: updatedUser,
+            profileImage: photoUrl,
+            publicId: newPublicId
+        });
     } catch (error) {
-        console.error("updateProfilePhoto error:", error);
-        return res.status(500).json({ message: "Error updating profile photo: " + error.message });
+        console.error("[PROFILE PHOTO CONTROLLER ERROR]:", error);
+        return res.status(500).json({
+            message: `Profile Photo Update Error: ${error.message || "Internal server error"}`
+        });
     }
 };
 

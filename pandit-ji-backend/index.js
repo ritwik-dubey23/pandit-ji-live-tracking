@@ -24,15 +24,16 @@ initSocket(server);
 const allowedOrigins = [
     "http://localhost:5173",
     "http://localhost:3000",
+    "https://pandit-ji-frontend.onrender.com",
     process.env.FRONTEND_URL
 ].filter(Boolean);
 
 app.use(cors({
     origin: (origin, callback) => {
-        if (!origin || allowedOrigins.includes(origin) || origin.endsWith(".vercel.app")) {
-            callback(null, true);
+        if (!origin || allowedOrigins.includes(origin) || origin.endsWith(".onrender.com") || origin.endsWith(".vercel.app")) {
+            callback(null, origin || true);
         } else {
-            callback(null, true);
+            callback(null, origin);
         }
     },
     credentials: true

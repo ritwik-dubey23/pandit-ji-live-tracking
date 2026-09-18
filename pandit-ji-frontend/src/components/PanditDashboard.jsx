@@ -105,10 +105,17 @@ function PanditDashboard() {
 
         try {
             setUploadingProfilePhoto(true);
+            const token = localStorage.getItem("pandit_ji_token");
+            const requestHeaders = {};
+            if (token) {
+                requestHeaders["Authorization"] = `Bearer ${token}`;
+            }
+
             const res = await axios.post(`${serverUrl}/api/pandit/profile-photo`, formData, {
-                headers: { "Content-Type": "multipart/form-data" },
+                headers: requestHeaders,
                 withCredentials: true
             });
+
             dispatch(setMyPanditProfile(res.data.pandit));
             if (res.data.user) {
                 dispatch(setUserData(res.data.user));
@@ -117,8 +124,9 @@ function PanditDashboard() {
             alert("Pandit Ji profile photo updated successfully!");
         } catch (err) {
             setUploadingProfilePhoto(false);
-            console.error("Profile photo upload error:", err);
-            alert(err?.response?.data?.message || "Failed to upload profile photo. Please try again.");
+            console.error("Profile photo upload error details:", err);
+            const errorMsg = err?.response?.data?.message || err?.message || "Failed to upload profile photo. Please check network connection and try again.";
+            alert(`⚠️ Profile Photo Upload Failed: ${errorMsg}`);
         }
     };
 

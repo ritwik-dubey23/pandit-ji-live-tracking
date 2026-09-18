@@ -3,10 +3,20 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+const apiKey = process.env.CLOUDINARY_API_KEY;
+const apiSecret = process.env.CLOUDINARY_API_SECRET;
+
+if (!cloudName || !apiKey || !apiSecret) {
+    console.warn("[CLOUDINARY WARN] Cloudinary environment variables are incomplete! Ensure CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET are set in Render.");
+} else {
+    console.log(`[CLOUDINARY CONFIG] Cloudinary initialized with cloud_name: ${cloudName}`);
+}
+
 cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET
+    cloud_name: cloudName,
+    api_key: apiKey,
+    api_secret: apiSecret
 });
 
 export const getPublicIdFromUrl = (url) => {
