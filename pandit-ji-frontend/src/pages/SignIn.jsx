@@ -82,6 +82,8 @@ function SignInContent() {
             const errStr = String(error?.message || "") + " " + String(error?.code || "") + " " + JSON.stringify(error || {});
             if (errStr.includes("API key not valid") || errStr.includes("API_KEY_INVALID") || errStr.includes("invalid-api-key") || error?.code === "auth/invalid-api-key") {
                 setErr("Invalid Firebase API Key in .env. Please sign in using Email & Password below (e.g. pandit.ramesh@panditji.com / pandit123) or provide a valid Firebase API Key in .env.");
+            } else if (error?.code === "auth/unauthorized-domain" || errStr.includes("unauthorized-domain")) {
+                setErr("Firebase Domain Unauthorized: Please add your current domain (e.g. localhost or 127.0.0.1) to Firebase Console -> Authentication -> Settings -> Authorized domains.");
             } else {
                 setErr(error?.message || "Google authentication failed. Please try again.");
             }

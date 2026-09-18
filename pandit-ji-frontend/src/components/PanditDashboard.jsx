@@ -50,6 +50,7 @@ function PanditDashboard() {
     const [servicePrice, setServicePrice] = useState('');
     const [serviceDesc, setServiceDesc] = useState('');
     const [serviceDuration, setServiceDuration] = useState('2 Hours');
+    const [serviceImageFile, setServiceImageFile] = useState(null);
     const [savingService, setSavingService] = useState(false);
 
     // Service Multi-Photo Management state
@@ -109,11 +110,15 @@ function PanditDashboard() {
                 withCredentials: true
             });
             dispatch(setMyPanditProfile(res.data.pandit));
+            if (res.data.user) {
+                dispatch(setUserData(res.data.user));
+            }
             setUploadingProfilePhoto(false);
-            alert("Pandit Ji profile photo updated!");
+            alert("Pandit Ji profile photo updated successfully!");
         } catch (err) {
             setUploadingProfilePhoto(false);
-            alert("Failed to upload profile photo.");
+            console.error("Profile photo upload error:", err);
+            alert(err?.response?.data?.message || "Failed to upload profile photo. Please try again.");
         }
     };
 
@@ -145,12 +150,19 @@ function PanditDashboard() {
         e.preventDefault();
         setSavingService(true);
         try {
-            const res = await axios.post(`${serverUrl}/api/pandit/service`, {
-                name: serviceName,
-                price: servicePrice,
-                description: serviceDesc,
-                duration: serviceDuration
-            }, { withCredentials: true });
+            const formData = new FormData();
+            formData.append("name", serviceName);
+            formData.append("price", servicePrice);
+            formData.append("description", serviceDesc);
+            formData.append("duration", serviceDuration);
+            if (serviceImageFile) {
+                formData.append("image", serviceImageFile);
+            }
+
+            const res = await axios.post(`${serverUrl}/api/pandit/service`, formData, {
+                headers: { "Content-Type": "multipart/form-data" },
+                withCredentials: true
+            });
 
             dispatch(setMyPanditProfile(res.data.pandit));
             setSavingService(false);
@@ -158,6 +170,7 @@ function PanditDashboard() {
             setServiceName('');
             setServicePrice('');
             setServiceDesc('');
+            setServiceImageFile(null);
             alert("New Pooja service added successfully!");
         } catch (error) {
             setSavingService(false);
@@ -487,6 +500,17 @@ function PanditDashboard() {
                                         onChange={(e) => setServiceDesc(e.target.value)}
                                         className="w-full border border-gray-300 rounded-xl p-3 text-xs font-semibold"
                                     />
+                                    <div>
+                                        <label className="block text-[11px] font-extrabold text-gray-600 mb-1">
+                                            Service Cover Image (Optional)
+                                        </label>
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={(e) => setServiceImageFile(e.target.files?.[0] || null)}
+                                            className="w-full border border-gray-300 rounded-xl px-3 py-2 text-xs font-semibold file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-orange-50 file:text-[#ff4d2d]"
+                                        />
+                                    </div>
                                     <button
                                         type="submit"
                                         disabled={savingService}

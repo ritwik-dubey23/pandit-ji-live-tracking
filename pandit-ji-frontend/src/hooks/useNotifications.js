@@ -30,15 +30,19 @@ export default function useNotifications() {
         fetchNotifications();
     }, [userData?._id, dispatch]);
 
-    // 2. Real-Time Socket.IO Listener for Incoming Notifications
+    // 2. Real-Time Socket.IO Listener for Incoming Notifications & Reconnection
     useEffect(() => {
         if (!userData?._id) return;
 
         const userId = userData._id;
-        socket.emit("join_user_room", userId);
-        if (userData.role === "pandit") {
-            socket.emit("join_pandit_room", userId);
-        }
+        const joinRooms = () => {
+            socket.emit("join_user_room", userId);
+            if (userData.role === "pandit") {
+                socket.emit("join_pandit_room", userId);
+            }
+        };
+
+        joinRooms();
 
         const handleNewNotification = (notif) => {
             console.log("[SOCKET RECEIVED NEW NOTIFICATION]", notif);
@@ -52,9 +56,11 @@ export default function useNotifications() {
             }
         };
 
+        socket.on("connect", joinRooms);
         socket.on("new_notification", handleNewNotification);
 
         return () => {
+            socket.off("connect", joinRooms);
             socket.off("new_notification", handleNewNotification);
         };
     }, [userData?._id, userData?.role, soundEnabled, dispatch]);

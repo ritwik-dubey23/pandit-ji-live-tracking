@@ -1,6 +1,6 @@
 import Pandit from "../models/pandit.model.js";
 import User from "../models/user.models.js";
-import cloudinary from "../config/cloudinary.js";
+import cloudinary, { deleteCloudinaryImage } from "../config/cloudinary.js";
 
 export const getAllPandits = async (req, res) => {
     try {
@@ -62,7 +62,18 @@ export const createOrUpdateProfile = async (req, res) => {
         let photoUrls = pandit ? pandit.photos || [] : [];
         let profileImageUrl = pandit ? pandit.profileImage || "" : "";
 
-        if (req.files && req.files.length > 0) {
+        if (req.file) {
+            try {
+                const uploadResult = await cloudinary.uploader.upload(req.file.path, {
+                    folder: "pandit_ji_profile"
+                });
+                if (uploadResult?.secure_url) {
+                    profileImageUrl = uploadResult.secure_url;
+                }
+            } catch (cloudErr) {
+                console.error("Cloudinary profile upload error:", cloudErr.message);
+            }
+        } else if (req.files && req.files.length > 0) {
             const uploadedUrls = [];
             try {
                 for (const file of req.files) {
@@ -81,6 +92,8 @@ export const createOrUpdateProfile = async (req, res) => {
                 profileImageUrl = uploadedUrls[0];
                 photoUrls = [...photoUrls, ...uploadedUrls];
             }
+        } else if (req.body.profileImage) {
+            profileImageUrl = req.body.profileImage;
         }
 
         if (pandit) {
@@ -96,7 +109,11 @@ export const createOrUpdateProfile = async (req, res) => {
             pandit.photos = photoUrls;
 
             await pandit.save();
-            return res.status(200).json({ message: "Profile updated successfully", pandit });
+            let updatedUser = user;
+            if (profileImageUrl) {
+                updatedUser = await User.findByIdAndUpdate(req.userId, { profileImage: profileImageUrl }, { new: true });
+            }
+            return res.status(200).json({ message: "Profile updated successfully", pandit, user: updatedUser });
         } else {
             // Default initial Pooja services for new Pandit profile
             const defaultServices = [
@@ -122,7 +139,11 @@ export const createOrUpdateProfile = async (req, res) => {
                 services: defaultServices
             });
 
-            return res.status(201).json({ message: "Pandit Ji profile created successfully", pandit });
+            if (profileImageUrl) {
+                await User.findByIdAndUpdate(req.userId, { profileImage: profileImageUrl });
+            }
+            const updatedUser = await User.findById(req.userId);
+            return res.status(201).json({ message: "Pandit Ji profile created successfully", pandit, user: updatedUser });
         }
     } catch (error) {
         console.error("createOrUpdateProfile error:", error);
@@ -273,14 +294,21 @@ export const updateProfilePhoto = async (req, res) => {
         let photoUrl = "";
         if (req.file) {
             try {
+                if (pandit.profileImage) {
+                    await deleteCloudinaryImage(pandit.profileImage);
+                }
                 const uploadResult = await cloudinary.uploader.upload(req.file.path, {
                     folder: "pandit_ji_profile"
                 });
-                photoUrl = uploadResult.secure_url;
+                photoUrl = uploadResult?.secure_url || "";
             } catch (cloudErr) {
                 console.error("Cloudinary profile upload error:", cloudErr.message);
+                return res.status(500).json({ message: "Cloudinary upload failed: " + cloudErr.message });
             }
         } else if (req.body.profileImage) {
+            if (pandit.profileImage && pandit.profileImage !== req.body.profileImage) {
+                await deleteCloudinaryImage(pandit.profileImage);
+            }
             photoUrl = req.body.profileImage;
         }
 
@@ -293,9 +321,9 @@ export const updateProfilePhoto = async (req, res) => {
         await pandit.save();
 
         // Also update User profile document
-        await User.findByIdAndUpdate(req.userId, { profileImage: photoUrl });
+        const updatedUser = await User.findByIdAndUpdate(req.userId, { profileImage: photoUrl }, { new: true });
 
-        return res.status(200).json({ message: "Profile photo updated successfully", pandit });
+        return res.status(200).json({ message: "Profile photo updated successfully", pandit, user: updatedUser });
     } catch (error) {
         console.error("updateProfilePhoto error:", error);
         return res.status(500).json({ message: "Error updating profile photo: " + error.message });

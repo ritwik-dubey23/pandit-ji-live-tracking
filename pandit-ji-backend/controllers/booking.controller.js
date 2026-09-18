@@ -122,7 +122,7 @@ export const updateBookingStatus = async (req, res) => {
         const { id } = req.params;
         const { status } = req.body;
 
-        const validStatuses = ["pending", "accepted", "rejected", "completed", "cancelled"];
+        const validStatuses = ["pending", "accepted", "on_the_way", "arriving", "reached", "started", "completed", "rejected", "cancelled"];
         if (!validStatuses.includes(status)) {
             return res.status(400).json({ message: "Invalid booking status." });
         }
@@ -141,7 +141,7 @@ export const updateBookingStatus = async (req, res) => {
             const userId = booking.user._id ? booking.user._id.toString() : booking.user.toString();
             const panditUserId = booking.pandit.user ? booking.pandit.user.toString() : booking.pandit.toString();
 
-            console.log(`[SOCKET] Emitting booking_status_updated to user_${userId}, pandit_${panditUserId}, booking_${id}`);
+            console.log(`[SOCKET] Emitting booking_status_updated (${status}) to user_${userId}, pandit_${panditUserId}, booking_${id}`);
             io.to(`user_${userId}`).emit("booking_status_updated", booking);
             io.to(`pandit_${panditUserId}`).emit("booking_status_updated", booking);
             io.to(`booking_${id}`).emit("booking_status_updated", booking);
@@ -158,6 +158,46 @@ export const updateBookingStatus = async (req, res) => {
                     type: "booking_accepted",
                     bookingId: booking._id,
                     data: { bookingId: booking._id, status: "accepted" }
+                });
+            } else if (status === "on_the_way") {
+                await createAndEmitNotification({
+                    recipientId: userId,
+                    senderId: panditUserId,
+                    title: "Pandit Ji is On The Way 🚗",
+                    message: `${booking.pandit.name} has started driving to your venue for ${booking.serviceName}.`,
+                    type: "booking_on_the_way",
+                    bookingId: booking._id,
+                    data: { bookingId: booking._id, status: "on_the_way" }
+                });
+            } else if (status === "arriving") {
+                await createAndEmitNotification({
+                    recipientId: userId,
+                    senderId: panditUserId,
+                    title: "Pandit Ji Arriving Shortly 📍",
+                    message: `${booking.pandit.name} is near your venue location.`,
+                    type: "booking_arriving",
+                    bookingId: booking._id,
+                    data: { bookingId: booking._id, status: "arriving" }
+                });
+            } else if (status === "reached") {
+                await createAndEmitNotification({
+                    recipientId: userId,
+                    senderId: panditUserId,
+                    title: "Pandit Ji Reached Venue 🙏",
+                    message: `${booking.pandit.name} has reached your venue.`,
+                    type: "booking_reached",
+                    bookingId: booking._id,
+                    data: { bookingId: booking._id, status: "reached" }
+                });
+            } else if (status === "started") {
+                await createAndEmitNotification({
+                    recipientId: userId,
+                    senderId: panditUserId,
+                    title: "Pooja Ceremony Started 🕉️",
+                    message: `The sacred ${booking.serviceName} ceremony has officially started.`,
+                    type: "booking_started",
+                    bookingId: booking._id,
+                    data: { bookingId: booking._id, status: "started" }
                 });
             } else if (status === "rejected") {
                 io.to(`user_${userId}`).emit("booking_rejected", booking);
