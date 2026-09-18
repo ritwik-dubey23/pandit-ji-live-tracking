@@ -1,5 +1,6 @@
 import Booking from "../models/booking.model.js";
 import Pandit from "../models/pandit.model.js";
+import Review from "../models/review.model.js";
 import { getIo } from "../socket.js";
 import { createAndEmitNotification } from "./notification.controller.js";
 
@@ -19,7 +20,6 @@ export const createBooking = async (req, res) => {
             userName,
             userMobile,
             address,
-            totalAmount,
             latitude,
             longitude
         } = req.body;
@@ -32,15 +32,28 @@ export const createBooking = async (req, res) => {
         const userLat = latitude ? Number(latitude) : 22.7196;
         const userLon = longitude ? Number(longitude) : 75.8577;
 
+        // Server-Side Price Verification against Pandit's configured services
+        let verifiedPrice = 500;
+        const targetServiceName = serviceName ? serviceName.trim() : "Custom Pooja";
+        const matchedService = pandit.services.find(s => s.name.toLowerCase() === targetServiceName.toLowerCase());
+
+        if (matchedService) {
+            verifiedPrice = matchedService.price;
+        } else if (servicePrice && Number(servicePrice) > 0) {
+            verifiedPrice = Number(servicePrice);
+        }
+
+        const isBhojanSevaRequest = Boolean(bhojanSeva) || targetServiceName.toLowerCase().includes("bhojan");
+
         const booking = await Booking.create({
             user: req.userId,
             pandit: panditId,
             bookingType: bookingType || "scheduled",
-            serviceName: serviceName || "Custom Pooja",
-            servicePrice: servicePrice ? Number(servicePrice) : 0,
+            serviceName: targetServiceName,
+            servicePrice: verifiedPrice,
             isCustomPooja: Boolean(isCustomPooja),
             customRequirement: customRequirement || "",
-            bhojanSeva: Boolean(bhojanSeva),
+            bhojanSeva: isBhojanSevaRequest,
             numberOfPeople: numberOfPeople ? Number(numberOfPeople) : 1,
             date: date || new Date().toISOString().split("T")[0],
             time: time || "10:00 AM",
@@ -51,7 +64,7 @@ export const createBooking = async (req, res) => {
             panditLocation: { latitude: userLat + 0.015, longitude: userLon + 0.015 },
             distanceKm: 2.1,
             etaMinutes: 8,
-            totalAmount: Number(totalAmount) || Number(servicePrice) || 500,
+            totalAmount: verifiedPrice,
             status: "pending"
         });
 
@@ -66,12 +79,11 @@ export const createBooking = async (req, res) => {
             console.log(`[SOCKET] Emitting new_booking to room pandit_${panditUserId}`);
             io.to(`pandit_${panditUserId}`).emit("new_booking", populatedBooking);
 
-            // Create and persist backend notification
             await createAndEmitNotification({
                 recipientId: pandit.user,
                 senderId: req.userId,
-                title: "New Booking Request 🕉️",
-                message: `${userName} sent a booking request for ${populatedBooking.serviceName} on ${date}.`,
+                title: isBhojanSevaRequest ? "Bhojan Seva Request 🍚" : "New Booking Request 🕉️",
+                message: `${userName} sent a ${isBhojanSevaRequest ? 'Bhojan Seva' : 'booking'} request for ${populatedBooking.serviceName} on ${date} (₹${verifiedPrice}).`,
                 type: "booking_request",
                 bookingId: booking._id,
                 data: { bookingId: booking._id, serviceName: populatedBooking.serviceName }
@@ -94,6 +106,7 @@ export const getUserBookings = async (req, res) => {
     try {
         const bookings = await Booking.find({ user: req.userId })
             .populate("pandit")
+            .populate("review")
             .sort({ createdAt: -1 });
         return res.status(200).json(bookings);
     } catch (error) {
@@ -110,6 +123,7 @@ export const getPanditBookings = async (req, res) => {
 
         const bookings = await Booking.find({ pandit: pandit._id })
             .populate("user", "fullName email mobile")
+            .populate("review")
             .sort({ createdAt: -1 });
         return res.status(200).json(bookings);
     } catch (error) {
@@ -154,7 +168,7 @@ export const updateBookingStatus = async (req, res) => {
                     recipientId: userId,
                     senderId: panditUserId,
                     title: "Booking Accepted! 🙏",
-                    message: `${booking.pandit.name} has accepted your booking request for ${booking.serviceName}.`,
+                    message: `${booking.pandit.name} has accepted your request for ${booking.serviceName}.`,
                     type: "booking_accepted",
                     bookingId: booking._id,
                     data: { bookingId: booking._id, status: "accepted" }
@@ -217,7 +231,7 @@ export const updateBookingStatus = async (req, res) => {
                     recipientId: userId,
                     senderId: panditUserId,
                     title: "Ceremony Completed 🚩",
-                    message: `Your ${booking.serviceName} ceremony has been marked as completed!`,
+                    message: `Your ${booking.serviceName} ceremony has been marked as completed! You can now rate Pandit Ji.`,
                     type: "booking_completed",
                     bookingId: booking._id,
                     data: { bookingId: booking._id, status: "completed" }
@@ -247,6 +261,72 @@ export const updateBookingStatus = async (req, res) => {
     }
 };
 
+export const submitBookingReview = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { rating, comment } = req.body;
+
+        const numericRating = Number(rating);
+        if (!numericRating || numericRating < 1 || numericRating > 5) {
+            return res.status(400).json({ message: "Rating must be between 1 and 5 stars." });
+        }
+
+        const booking = await Booking.findById(id).populate("pandit").populate("user", "fullName");
+        if (!booking) {
+            return res.status(404).json({ message: "Booking not found." });
+        }
+
+        if (booking.user._id.toString() !== req.userId) {
+            return res.status(403).json({ message: "You are not authorized to rate this booking." });
+        }
+
+        if (booking.status !== "completed") {
+            return res.status(400).json({ message: "You can only rate a ceremony after it is completed." });
+        }
+
+        if (booking.isRated) {
+            return res.status(400).json({ message: "You have already submitted a review for this booking." });
+        }
+
+        // Create Review Document
+        const review = await Review.create({
+            booking: booking._id,
+            user: req.userId,
+            pandit: booking.pandit._id,
+            rating: numericRating,
+            comment: comment ? comment.trim() : "",
+            userName: booking.userName || booking.user.fullName || "Verified Devotee",
+            serviceName: booking.serviceName
+        });
+
+        // Mark Booking as rated
+        booking.isRated = true;
+        booking.review = review._id;
+        await booking.save();
+
+        // Recalculate Pandit's rating average and count
+        const allReviews = await Review.find({ pandit: booking.pandit._id });
+        const totalRating = allReviews.reduce((sum, r) => sum + r.rating, 0);
+        const count = allReviews.length;
+        const average = Number((totalRating / count).toFixed(1));
+
+        const pandit = await Pandit.findById(booking.pandit._id);
+        if (pandit) {
+            pandit.rating = { average, count };
+            await pandit.save();
+        }
+
+        return res.status(200).json({
+            message: "Thank you for your rating & review! 🙏",
+            review,
+            booking
+        });
+    } catch (error) {
+        console.error("submitBookingReview error:", error);
+        return res.status(500).json({ message: "Error submitting review." });
+    }
+};
+
 export const acceptBooking = async (req, res) => {
     req.body = { status: "accepted" };
     return updateBookingStatus(req, res);
@@ -256,4 +336,3 @@ export const rejectBooking = async (req, res) => {
     req.body = { status: "rejected" };
     return updateBookingStatus(req, res);
 };
-

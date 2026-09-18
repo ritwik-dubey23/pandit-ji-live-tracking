@@ -1,5 +1,6 @@
 import Pandit from "../models/pandit.model.js";
 import User from "../models/user.models.js";
+import Review from "../models/review.model.js";
 import cloudinary, { deleteCloudinaryImage } from "../config/cloudinary.js";
 
 export const getAllPandits = async (req, res) => {
@@ -33,7 +34,10 @@ export const getPanditById = async (req, res) => {
         if (!pandit) {
             return res.status(404).json({ message: "Pandit Ji profile not found" });
         }
-        return res.status(200).json(pandit);
+        const reviews = await Review.find({ pandit: pandit._id }).sort({ createdAt: -1 });
+        const panditObj = pandit.toObject();
+        panditObj.reviews = reviews;
+        return res.status(200).json(panditObj);
     } catch (error) {
         return res.status(500).json({ message: "Error fetching Pandit Ji details" });
     }

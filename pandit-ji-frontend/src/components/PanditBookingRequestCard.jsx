@@ -43,14 +43,20 @@ function PanditBookingRequestCard({ booking, onAcceptSuccess }) {
             <div>
                 {/* Header Badge */}
                 <div className="flex items-center justify-between border-b border-orange-100 pb-3">
-                    <span className={`text-xs font-black uppercase tracking-wider px-3 py-1 rounded-full flex items-center gap-1.5 ${
-                        isInstant
-                            ? "bg-red-500 text-white shadow-xs"
-                            : "bg-amber-100 text-amber-900 border border-amber-300"
-                    }`}>
-                        {isInstant ? <FaBolt className="animate-pulse" /> : <FaCalendarAlt />}
-                        {isInstant ? "🔔 NEW INSTANT REQUEST" : "📅 SCHEDULED REQUEST"}
-                    </span>
+                    {booking.bhojanSeva || booking.serviceName?.toLowerCase().includes("bhojan") ? (
+                        <span className="bg-orange-600 text-white text-xs font-black uppercase tracking-wider px-3 py-1 rounded-full flex items-center gap-1.5 shadow-xs">
+                            🍚 BHOJAN SEVA REQUEST ({booking.numberOfPeople || 1} Guests)
+                        </span>
+                    ) : (
+                        <span className={`text-xs font-black uppercase tracking-wider px-3 py-1 rounded-full flex items-center gap-1.5 ${
+                            isInstant
+                                ? "bg-red-500 text-white shadow-xs"
+                                : "bg-amber-100 text-amber-900 border border-amber-300"
+                        }`}>
+                            {isInstant ? <FaBolt className="animate-pulse" /> : <FaCalendarAlt />}
+                            {isInstant ? "🔔 NEW INSTANT REQUEST" : "📅 SCHEDULED REQUEST"}
+                        </span>
+                    )}
 
                     <span className="text-xl font-black text-gray-900">₹{booking.totalAmount}</span>
                 </div>

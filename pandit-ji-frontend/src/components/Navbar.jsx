@@ -74,14 +74,14 @@ function Navbar({ searchQuery = "", setSearchQuery = () => {}, onSearchSubmit = 
       
       {/* ================= MOBILE VIEW (< md) ================= */}
       <div className="relative flex w-full items-center justify-between md:hidden px-1 h-full">
-        {/* LOGO & BRAND (w-10 h-10) */}
-        <div className="flex items-center gap-2 cursor-pointer shrink-0" onClick={() => navigate("/")}>
+        {/* LOGO & BRAND (w-11 h-11 sm:w-12 sm:h-12) */}
+        <div className="flex items-center gap-2.5 cursor-pointer shrink-0" onClick={() => navigate("/")}>
           <img
             src="/logo.png"
             alt="Maharaj Ji"
-            className="w-10 h-10 rounded-full object-cover shadow-sm border border-orange-300"
+            className="w-11 h-11 sm:w-12 sm:h-12 rounded-full object-cover overflow-hidden aspect-square shadow-sm border-2 border-orange-400"
           />
-          <h1 className="text-xl font-black text-[#ff4d2d] tracking-tight">Maharaj Ji</h1>
+          <h1 className="text-xl sm:text-2xl font-black text-[#ff4d2d] tracking-tight">Maharaj Ji</h1>
         </div>
 
         {/* SEARCH OVERLAY FOR MOBILE */}

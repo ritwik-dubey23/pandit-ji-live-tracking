@@ -5,7 +5,8 @@ import {
     getPanditBookings,
     updateBookingStatus,
     acceptBooking,
-    rejectBooking
+    rejectBooking,
+    submitBookingReview
 } from "../controllers/booking.controller.js";
 import isAuth from "../middlewares/isAuth.js";
 
@@ -27,5 +28,8 @@ bookingRouter.put("/status/:id", isAuth, updateBookingStatus);
 bookingRouter.post("/:id/status", isAuth, updateBookingStatus);
 bookingRouter.put("/:id/status", isAuth, updateBookingStatus);
 
-export default bookingRouter;
+// Rating & Review route
+bookingRouter.post("/:id/rate", isAuth, submitBookingReview);
+bookingRouter.put("/:id/rate", isAuth, submitBookingReview);
 
+export default bookingRouter;

@@ -84,6 +84,14 @@ const bookingSchema = new mongoose.Schema({
         type: String,
         enum: ["pending", "accepted", "on_the_way", "arriving", "reached", "started", "completed", "cancelled", "rejected"],
         default: "pending"
+    },
+    isRated: {
+        type: Boolean,
+        default: false
+    },
+    review: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Review"
     }
 }, { timestamps: true });
 

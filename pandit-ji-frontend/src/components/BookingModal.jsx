@@ -51,10 +51,10 @@ function BookingModal({ pandit, initialService, onClose }) {
     const [error, setError] = useState('');
 
     // Calculate total price
-    const currentServiceObj = (pandit?.services || []).find(s => s.name === selectedService);
-    let basePrice = currentServiceObj ? currentServiceObj.price : 1100;
+    const currentServiceObj = (pandit?.services || []).find(s => s.name.toLowerCase() === selectedService.toLowerCase());
+    let basePrice = currentServiceObj ? currentServiceObj.price : (selectedService.toLowerCase().includes("bhojan") ? 500 : 1100);
     if (isCustomPooja) basePrice = 1500; // base default for custom
-    const bhojanAddon = bhojanSeva ? numberOfPeople * 50 : 0;
+    const bhojanAddon = bhojanSeva && !selectedService.toLowerCase().includes("bhojan") ? numberOfPeople * 50 : 0;
     const totalAmount = basePrice + bhojanAddon;
 
     const handleCreateBooking = async (e) => {
@@ -339,8 +339,11 @@ function BookingModal({ pandit, initialService, onClose }) {
                     {/* Price Summary & Submit */}
                     <div className="pt-3 border-t border-gray-200 flex items-center justify-between gap-4">
                         <div>
-                            <span className="text-xs text-gray-500 block">Total Booking Amount</span>
+                            <span className="text-xs text-gray-500 block">Total Service Charge</span>
                             <span className="text-2xl font-extrabold text-gray-900">₹{totalAmount}</span>
+                            <span className="text-[11px] font-semibold text-orange-600 block mt-0.5">
+                                * Dakshina: Optional / As mutually decided
+                            </span>
                         </div>
 
                         <button
