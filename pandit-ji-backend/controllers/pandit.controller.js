@@ -141,7 +141,6 @@ export const addOrUpdateService = async (req, res) => {
         let pandit = await Pandit.findOne({ user: req.userId });
 
         if (!pandit) {
-            // Auto-create Pandit profile document if missing
             pandit = await Pandit.create({
                 user: req.userId,
                 name: user.fullName,
@@ -153,20 +152,39 @@ export const addOrUpdateService = async (req, res) => {
                 mobile: user.mobile,
                 email: user.email,
                 profileImage: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400",
-                photos: ["https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400"],
                 services: []
             });
         }
 
         let imageUrl = "";
+        let uploadedPhotos = [];
+
+        // Check if single image or fields photos uploaded
         if (req.file) {
             try {
                 const uploadResult = await cloudinary.uploader.upload(req.file.path, {
                     folder: "pandit_ji_services"
                 });
                 imageUrl = uploadResult?.secure_url || "";
+                if (imageUrl) uploadedPhotos.push(imageUrl);
             } catch (cloudErr) {
                 console.error("Cloudinary service image upload error:", cloudErr.message);
+            }
+        } else if (req.files) {
+            try {
+                const imageFile = req.files.image ? req.files.image[0] : null;
+                if (imageFile) {
+                    const resImg = await cloudinary.uploader.upload(imageFile.path, { folder: "pandit_ji_services" });
+                    imageUrl = resImg?.secure_url || "";
+                }
+                if (req.files.photos && req.files.photos.length > 0) {
+                    for (const f of req.files.photos) {
+                        const resPhoto = await cloudinary.uploader.upload(f.path, { folder: "pandit_ji_services" });
+                        if (resPhoto?.secure_url) uploadedPhotos.push(resPhoto.secure_url);
+                    }
+                }
+            } catch (cloudErr) {
+                console.error("Cloudinary photos upload error:", cloudErr.message);
             }
         }
 
@@ -178,15 +196,23 @@ export const addOrUpdateService = async (req, res) => {
                 service.price = price !== undefined ? Number(price) : service.price;
                 service.duration = duration || service.duration;
                 if (imageUrl) service.image = imageUrl;
+                if (uploadedPhotos.length > 0) {
+                    if (!service.photos) service.photos = [];
+                    uploadedPhotos.forEach(p => {
+                        if (!service.photos.includes(p)) service.photos.push(p);
+                    });
+                }
             }
         } else {
-            pandit.services.push({
+            const newService = {
                 name,
                 description: description || "",
                 price: Number(price),
                 duration: duration || "1-2 Hours",
-                image: imageUrl
-            });
+                image: imageUrl || (uploadedPhotos.length > 0 ? uploadedPhotos[0] : ""),
+                photos: uploadedPhotos
+            };
+            pandit.services.push(newService);
         }
 
         await pandit.save();
@@ -246,25 +272,27 @@ export const updateProfilePhoto = async (req, res) => {
 
         let photoUrl = "";
         if (req.file) {
-            const uploadResult = await cloudinary.uploader.upload(req.file.path, {
-                folder: "pandit_ji_profile"
-            });
-            photoUrl = uploadResult.secure_url;
+            try {
+                const uploadResult = await cloudinary.uploader.upload(req.file.path, {
+                    folder: "pandit_ji_profile"
+                });
+                photoUrl = uploadResult.secure_url;
+            } catch (cloudErr) {
+                console.error("Cloudinary profile upload error:", cloudErr.message);
+            }
         } else if (req.body.profileImage) {
             photoUrl = req.body.profileImage;
         }
 
         if (!photoUrl) {
-            return res.status(400).json({ message: "No profile image provided." });
+            return res.status(400).json({ message: "No profile image provided or Cloudinary upload failed." });
         }
 
+        // Strictly SINGLE profile photo policy
         pandit.profileImage = photoUrl;
-        if (!pandit.photos.includes(photoUrl)) {
-            pandit.photos.unshift(photoUrl);
-        }
         await pandit.save();
 
-        // Also update User profile if applicable
+        // Also update User profile document
         await User.findByIdAndUpdate(req.userId, { profileImage: photoUrl });
 
         return res.status(200).json({ message: "Profile photo updated successfully", pandit });
