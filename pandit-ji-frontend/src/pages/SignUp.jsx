@@ -120,6 +120,8 @@ function SignUpContent() {
                 setErr("Invalid Firebase API Key in .env. Please register using Email & Password or provide a valid Firebase API Key in .env.");
             } else if (error?.code === "auth/unauthorized-domain" || errStr.includes("unauthorized-domain")) {
                 setErr("Firebase Domain Unauthorized: Please add your current domain (e.g. localhost or 127.0.0.1) to Firebase Console -> Authentication -> Settings -> Authorized domains.");
+            } else if (error?.code === "auth/invalid-continue-uri" || errStr.includes("invalid-continue-uri")) {
+                setErr(`Firebase URL Error (auth/invalid-continue-uri): The domain '${window.location.origin}' is not authorized in Firebase Console. Please add '${window.location.origin}' to Firebase Console -> Authentication -> Settings -> Authorized domains. You can also sign up directly using Email & Password.`);
             } else {
                 setErr(error?.message || "Google registration failed. Please try again.");
             }
