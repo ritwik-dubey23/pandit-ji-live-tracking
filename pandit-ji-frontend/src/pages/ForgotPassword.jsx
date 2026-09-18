@@ -4,6 +4,9 @@ import axios from 'axios';
 import { FaHands, FaArrowLeft } from 'react-icons/fa';
 import { ClipLoader } from 'react-spinners';
 
+import { auth } from '../config/firebase';
+import { sendPasswordResetEmail } from 'firebase/auth';
+
 const serverUrl = import.meta.env.VITE_SERVER_URL || "http://localhost:8000";
 
 function ForgotPassword() {
@@ -32,6 +35,38 @@ function ForgotPassword() {
         } catch (error) {
             setLoading(false);
             setErr(error?.response?.data?.message || "Failed to send OTP.");
+        }
+    };
+
+    const handleFirebasePasswordReset = async () => {
+        if (!email || !email.includes("@")) {
+            setErr("Please enter a valid email address first.");
+            return;
+        }
+        setErr('');
+        setMessage('');
+        setLoading(true);
+
+        // Action Code Settings using dynamic current origin
+        const actionCodeSettings = {
+            url: `${window.location.origin}/signin`,
+            handleCodeInApp: true
+        };
+
+        try {
+            await sendPasswordResetEmail(auth, email, actionCodeSettings);
+            setLoading(false);
+            setMessage(`Password reset email sent to ${email}! Check your inbox/spam folder.`);
+        } catch (error) {
+            setLoading(false);
+            console.error("Firebase Password Reset Error:", error);
+            if (error?.code === "auth/invalid-continue-uri" || String(error?.message).includes("invalid-continue-uri")) {
+                setErr(`⚠️ Firebase: Error (auth/invalid-continue-uri).\nTo fix this: Go to Firebase Console -> Authentication -> Settings -> Authorized Domains and add '${window.location.origin}'.`);
+            } else if (error?.code === "auth/user-not-found") {
+                setErr("No account found registered with this email address.");
+            } else {
+                setErr(error?.message || "Failed to send password reset email via Firebase.");
+            }
         }
     };
 
@@ -109,6 +144,17 @@ function ForgotPassword() {
                         >
                             {loading ? <ClipLoader size={18} color="#fff" /> : "Send Verification OTP"}
                         </button>
+
+                        <div className="pt-2 text-center">
+                            <button
+                                type="button"
+                                onClick={handleFirebasePasswordReset}
+                                disabled={loading}
+                                className="text-xs font-extrabold text-orange-600 hover:underline cursor-pointer"
+                            >
+                                Or Send Password Reset Email Link via Firebase
+                            </button>
+                        </div>
                     </form>
                 )}
 
