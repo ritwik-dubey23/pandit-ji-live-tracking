@@ -3,6 +3,8 @@ import Pandit from "../models/pandit.model.js";
 import Review from "../models/review.model.js";
 import { getIo } from "../socket.js";
 import { createAndEmitNotification } from "./notification.controller.js";
+import { sendBookingRequestMail, sendBookingConfirmationMail, sendBookingCompletedMail } from "../utils/mail.js";
+import { sendWhatsAppBookingAlert, sendSMSBookingAlert } from "../utils/sms.js";
 
 export const createBooking = async (req, res) => {
     try {
@@ -88,6 +90,13 @@ export const createBooking = async (req, res) => {
                 bookingId: booking._id,
                 data: { bookingId: booking._id, serviceName: populatedBooking.serviceName }
             });
+
+            // Send Email Notification via Nodemailer
+            sendBookingRequestMail(populatedBooking).catch(e => console.error("[EMAIL ERROR] Request mail error:", e.message));
+
+            // Send WhatsApp & SMS Alerts to Pandit Ji
+            sendWhatsAppBookingAlert(populatedBooking).catch(e => console.error("[WHATSAPP ERROR] Alert error:", e.message));
+            sendSMSBookingAlert(populatedBooking).catch(e => console.error("[SMS ERROR] Alert error:", e.message));
         } catch (socketErr) {
             console.error("Socket emit failed:", socketErr.message);
         }
@@ -180,6 +189,9 @@ export const updateBookingStatus = async (req, res) => {
                     bookingId: booking._id,
                     data: { bookingId: booking._id, status: "accepted" }
                 });
+
+                // Send Confirmation Email via Nodemailer
+                sendBookingConfirmationMail(booking).catch(e => console.error("[EMAIL ERROR] Confirmation mail error:", e.message));
             } else if (status === "on_the_way") {
                 await createAndEmitNotification({
                     recipientId: userId,
@@ -243,6 +255,9 @@ export const updateBookingStatus = async (req, res) => {
                     bookingId: booking._id,
                     data: { bookingId: booking._id, status: "completed" }
                 });
+
+                // Send Ceremony Completed Email via Nodemailer
+                sendBookingCompletedMail(booking).catch(e => console.error("[EMAIL ERROR] Completion mail error:", e.message));
             } else if (status === "cancelled") {
                 await createAndEmitNotification({
                     recipientId: panditUserId,
