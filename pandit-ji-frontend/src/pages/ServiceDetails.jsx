@@ -113,11 +113,30 @@ function ServiceDetails() {
         pandit.profileImage
     ].filter(Boolean);
 
+    // Auto-slide image carousel (3.5s interval with pause on hover)
+    const [autoSlideEnabled, setAutoSlideEnabled] = useState(true);
+
+    const prevSlide = () => {
+        setActivePhotoIndex((prev) => (prev === 0 ? allPhotos.length - 1 : prev - 1));
+    };
+
+    const nextSlide = () => {
+        setActivePhotoIndex((prev) => (prev + 1) % allPhotos.length);
+    };
+
+    useEffect(() => {
+        if (!autoSlideEnabled || allPhotos.length <= 1) return;
+        const interval = setInterval(() => {
+            setActivePhotoIndex((prev) => (prev + 1) % allPhotos.length);
+        }, 3500);
+        return () => clearInterval(interval);
+    }, [autoSlideEnabled, allPhotos.length]);
+
     return (
         <div className="min-h-screen bg-[#fff9f5] flex flex-col justify-between">
             <Navbar />
 
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-[90px] md:pt-[105px] pb-8 w-full">
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-[95px] md:pt-[110px] pb-8 w-full">
                 {/* Back Link */}
                 <button
                     onClick={() => navigate(-1)}
@@ -146,24 +165,54 @@ function ServiceDetails() {
                                 {service.name}
                             </h1>
 
-                            {/* Image Lightbox Container */}
-                            <div className="mt-6">
+                            {/* Image Carousel Container with Left/Right Arrows & Auto-slide */}
+                            <div className="mt-6 relative">
                                 <div
-                                    onClick={() => setLightboxPhoto(allPhotos[activePhotoIndex] || service.image)}
-                                    className="relative h-80 sm:h-96 w-full rounded-2xl overflow-hidden bg-orange-50 border border-gray-200 shadow-xs cursor-pointer group"
+                                    onMouseEnter={() => setAutoSlideEnabled(false)}
+                                    onMouseLeave={() => setAutoSlideEnabled(true)}
+                                    className="relative h-80 sm:h-96 w-full rounded-2xl overflow-hidden bg-orange-50 border border-gray-200 shadow-sm group"
                                 >
                                     <img
-                                        src={allPhotos[activePhotoIndex] || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=600"}
+                                        src={allPhotos[activePhotoIndex] || service.image || "/logo.png"}
                                         alt={service.name}
-                                        className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                                        className="w-full h-full object-cover transition-all duration-500 group-hover:scale-105"
                                     />
-                                    <div className="absolute bottom-4 right-4 bg-black/70 text-white text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5 opacity-80 group-hover:opacity-100 transition">
-                                        <FaExpand size={12} /> Click to Expand Photo
+
+                                    {/* Left Arrow Button */}
+                                    {allPhotos.length > 1 && (
+                                        <button
+                                            type="button"
+                                            onClick={(e) => { e.stopPropagation(); prevSlide(); }}
+                                            className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 hover:bg-[#ff4d2d] text-white flex items-center justify-center transition shadow-lg z-20 cursor-pointer"
+                                            title="Previous Image"
+                                        >
+                                            <FaChevronLeft size={16} />
+                                        </button>
+                                    )}
+
+                                    {/* Right Arrow Button */}
+                                    {allPhotos.length > 1 && (
+                                        <button
+                                            type="button"
+                                            onClick={(e) => { e.stopPropagation(); nextSlide(); }}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 hover:bg-[#ff4d2d] text-white flex items-center justify-center transition shadow-lg z-20 cursor-pointer"
+                                            title="Next Image"
+                                        >
+                                            <FaChevronLeft size={16} className="rotate-180" />
+                                        </button>
+                                    )}
+
+                                    <div
+                                        onClick={() => setLightboxPhoto(allPhotos[activePhotoIndex] || service.image)}
+                                        className="absolute bottom-4 right-4 bg-black/70 hover:bg-black/90 text-white text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5 transition cursor-pointer z-20"
+                                    >
+                                        <FaExpand size={12} /> Expand
                                     </div>
                                 </div>
 
+                                {/* Thumbnail Selector */}
                                 {allPhotos.length > 1 && (
-                                    <div className="flex items-center gap-3 mt-4 overflow-x-auto pb-2">
+                                    <div className="flex items-center gap-3 mt-4 overflow-x-auto pb-2 scrollbar-none">
                                         {allPhotos.map((pUrl, idx) => (
                                             <button
                                                 key={idx}
@@ -174,7 +223,7 @@ function ServiceDetails() {
                                                         : "border-gray-200 opacity-70 hover:opacity-100"
                                                 }`}
                                             >
-                                                <img src={pUrl} alt="gallery" className="w-full h-full object-cover" />
+                                                <img src={pUrl} alt="gallery thumbnail" className="w-full h-full object-cover" />
                                             </button>
                                         ))}
                                     </div>

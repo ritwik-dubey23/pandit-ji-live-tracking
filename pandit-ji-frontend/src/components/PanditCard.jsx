@@ -24,12 +24,12 @@ function PanditCard({ pandit, onBookNow }) {
     };
 
     return (
-        <div className='w-[270px] max-sm:w-full rounded-2xl border-2 border-[#ff4d2d] overflow-hidden bg-white shadow-md hover:shadow-2xl transition-all duration-300 flex flex-col justify-between group'>
+        <div
+            onClick={() => navigate(`/pandit/${pandit._id}`)}
+            className='w-[270px] max-sm:w-full rounded-2xl border-2 border-[#ff4d2d] overflow-hidden bg-white shadow-md hover:shadow-2xl transition-all duration-300 flex flex-col justify-between group cursor-pointer'
+        >
             {/* Image Header - Clickable Photo */}
-            <div
-                onClick={() => navigate(`/pandit/${pandit._id}`)}
-                className='bg-white relative w-full h-[190px] max-sm:h-[150px] flex justify-center items-center overflow-hidden cursor-pointer group'
-            >
+            <div className='bg-white relative w-full h-[190px] max-sm:h-[150px] flex justify-center items-center overflow-hidden group'>
                 <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-xs rounded-full px-2.5 py-1 shadow-md border border-black/5 z-10 flex items-center gap-1">
                     <span className="text-xs font-bold text-gray-800">{pandit.rating?.average || 4.9}</span>
                     <FaStar className="text-amber-500 text-xs" />
@@ -45,7 +45,7 @@ function PanditCard({ pandit, onBookNow }) {
                 </div>
 
                 <img
-                    src={pandit.profileImage || (pandit.photos && pandit.photos[0]) || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400"}
+                    src={pandit.profileImage || (pandit.photos && pandit.photos[0]) || "/logo.png"}
                     alt={pandit.name}
                     className='w-full h-full object-cover transition-transform duration-300 group-hover:scale-108'
                 />
@@ -92,13 +92,21 @@ function PanditCard({ pandit, onBookNow }) {
 
                 <div className="flex items-center gap-1.5">
                     <button
-                        onClick={() => navigate(`/pandit/${pandit._id}`)}
-                        className="px-2.5 py-1.5 text-xs font-bold text-gray-700 hover:text-[#ff4d2d] bg-gray-100 rounded-lg cursor-pointer"
+                        type="button"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/pandit/${pandit._id}`);
+                        }}
+                        className="px-2.5 py-1.5 text-xs font-bold text-gray-700 hover:text-[#ff4d2d] bg-gray-100 hover:bg-gray-200 rounded-lg cursor-pointer"
                     >
                         Profile
                     </button>
                     <button
-                        onClick={() => onBookNow(pandit)}
+                        type="button"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onBookNow(pandit);
+                        }}
                         className="px-3.5 py-1.5 text-xs font-bold text-white bg-[#ff4d2d] hover:bg-[#e64323] rounded-lg shadow-xs cursor-pointer transition"
                     >
                         Book Now

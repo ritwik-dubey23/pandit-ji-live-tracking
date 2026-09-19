@@ -3,6 +3,7 @@ import L from 'leaflet';
 import { socket } from '../socket';
 import { FaTimes, FaPhone, FaCommentDots, FaBan, FaStar, FaChevronLeft } from 'react-icons/fa';
 import axios from 'axios';
+import { playChatMessageSentSound, playChatMessageReceivedSound } from '../utils/audio';
 
 const serverUrl = import.meta.env.VITE_SERVER_URL || "http://localhost:8000";
 const INDORE_FALLBACK = { lat: 22.7196, lng: 75.8577 };
@@ -196,6 +197,7 @@ function LiveTrackingModal({ booking, currentUserRole, onClose, onStatusUpdated 
                     if (prev.some(m => m.id === data.id || (m.text === data.text && m.sender === data.senderRole))) return prev;
                     return [...prev, { id: data.id, sender: data.senderRole, text: data.text, createdAt: data.createdAt }];
                 });
+                playChatMessageReceivedSound();
             }
         };
 
@@ -246,6 +248,7 @@ function LiveTrackingModal({ booking, currentUserRole, onClose, onStatusUpdated 
 
         setChatMessages(prev => [...prev, newMsg]);
         setNewMessage("");
+        playChatMessageSentSound();
 
         const recipientId = currentUserRole === "pandit"
             ? (booking.user?._id || booking.user)

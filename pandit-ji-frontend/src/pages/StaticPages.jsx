@@ -37,7 +37,6 @@ export function AboutPage() {
                     </ul>
                 </div>
             </div>
-            <Footer />
         </div>
     );
 }

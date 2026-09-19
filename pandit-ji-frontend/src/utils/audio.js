@@ -109,39 +109,104 @@ export const playBookingConfirmationSound = (bookingId) => {
 
 const playedArrivalIds = new Set();
 
-export const playPanditArrivedSound = (id = null) => {
-    if (!isSoundEnabled()) {
-        console.log("[AUDIO] Sound disabled in settings");
-        return false;
-    }
+let repeatingArrivalInterval = null;
+let activeArrivalBookingId = null;
 
-    const baseId = id ? id.toString().replace("_reached", "") : "default";
-
-    if (playedArrivalIds.has(baseId)) {
-        console.log(`[AUDIO DUP GUARD] Arrival sound already played for ID: ${baseId}`);
-        return false;
-    }
-
-    playedArrivalIds.add(baseId);
-    if (playedArrivalIds.size > 200) {
-        const first = playedArrivalIds.values().next().value;
-        playedArrivalIds.delete(first);
-    }
-
+export const playPanditArrivedAudioOnce = () => {
     try {
         const audio = new Audio("/pandit-arrived.aac");
         audio.volume = 1.0;
         const playPromise = audio.play();
         if (playPromise !== undefined) {
             playPromise.catch(err => {
-                console.warn("[AUDIO PLAYBACK WARN] HTML5 Audio autoplay prevented by browser:", err.message);
-                playNotificationSound(baseId);
+                console.warn("[AUDIO WARN] HTML5 Audio play prevented by browser:", err.message);
+                playNotificationSound("arrival_fallback");
             });
         }
         return true;
     } catch (err) {
-        console.warn("[AUDIO ERROR] Failed to play arrival sound:", err.message);
+        console.warn("[AUDIO ERROR] Failed to play arrival audio:", err.message);
         return false;
     }
 };
+
+export const startRepeatingArrivalSound = (bookingId = null) => {
+    if (!isSoundEnabled()) return false;
+    const bId = bookingId || "default";
+
+    if (activeArrivalBookingId === bId && repeatingArrivalInterval) {
+        console.log(`[AUDIO REPEAT] Arrival alert already repeating for booking: ${bId}`);
+        return false;
+    }
+
+    stopRepeatingArrivalSound();
+    activeArrivalBookingId = bId;
+
+    playPanditArrivedAudioOnce();
+
+    repeatingArrivalInterval = setInterval(() => {
+        playPanditArrivedAudioOnce();
+    }, 8000);
+
+    return true;
+};
+
+export const stopRepeatingArrivalSound = () => {
+    if (repeatingArrivalInterval) {
+        clearInterval(repeatingArrivalInterval);
+        repeatingArrivalInterval = null;
+    }
+    activeArrivalBookingId = null;
+};
+
+export const playPanditArrivedSound = (id = null) => {
+    return startRepeatingArrivalSound(id);
+};
+
+export const playChatMessageSentSound = () => {
+    if (!isSoundEnabled()) return;
+    try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        const ctx = new AudioCtx();
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(600, now);
+        osc.frequency.exponentialRampToValueAtTime(900, now + 0.08);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.1);
+    } catch (err) {
+        console.warn("Chat sent sound error:", err);
+    }
+};
+
+export const playChatMessageReceivedSound = () => {
+    if (!isSoundEnabled()) return;
+    try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        const ctx = new AudioCtx();
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(900, now);
+        osc.frequency.exponentialRampToValueAtTime(1200, now + 0.12);
+        gain.gain.setValueAtTime(0.25, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.15);
+    } catch (err) {
+        console.warn("Chat received sound error:", err);
+    }
+};
+
 

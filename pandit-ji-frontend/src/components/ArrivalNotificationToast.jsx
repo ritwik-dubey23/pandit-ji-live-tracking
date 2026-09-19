@@ -1,60 +1,59 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { clearArrivalPopup } from "../redux/userSlice";
 import { useNavigate } from "react-router-dom";
-import { IoLocationSharp, IoClose } from "react-icons/io5";
+import { IoLocationSharp, IoCheckmarkCircle } from "react-icons/io5";
+import { stopRepeatingArrivalSound } from "../utils/audio";
 
 export default function ArrivalNotificationToast() {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const { arrivalPopup } = useSelector((state) => state.user);
 
-    useEffect(() => {
-        if (arrivalPopup) {
-            const timer = setTimeout(() => {
-                dispatch(clearArrivalPopup());
-            }, 12000); // Auto-hide after 12 seconds
-            return () => clearTimeout(timer);
-        }
-    }, [arrivalPopup, dispatch]);
-
     if (!arrivalPopup) return null;
 
-    return (
-        <div className="fixed top-[90px] right-4 left-4 sm:left-auto sm:right-6 sm:w-96 z-[999999] bg-gradient-to-r from-orange-600 via-amber-600 to-orange-500 text-white p-4 rounded-2xl shadow-2xl border-2 border-orange-200 flex flex-col gap-2.5 transform transition-all duration-300 ease-out animate-bounce-short">
-            <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center gap-3">
-                    <div className="w-11 h-11 rounded-full bg-white/25 backdrop-blur-md flex items-center justify-center shrink-0 text-white font-extrabold text-xl shadow-inner border border-white/30">
-                        <IoLocationSharp size={26} className="text-yellow-300 animate-pulse" />
-                    </div>
-                    <div>
-                        <h4 className="font-black text-sm sm:text-base leading-snug text-yellow-100">
-                            {arrivalPopup.title || "Pandit Ji Reached Venue! 🙏"}
-                        </h4>
-                        <p className="text-xs sm:text-sm text-orange-50 mt-0.5 leading-snug font-medium">
-                            {arrivalPopup.message || "Pandit Ji has arrived at your location."}
-                        </p>
-                    </div>
-                </div>
-                <button
-                    onClick={() => dispatch(clearArrivalPopup())}
-                    className="p-1 rounded-full hover:bg-white/20 text-white/80 hover:text-white transition-colors shrink-0 cursor-pointer"
-                    aria-label="Close notification"
-                >
-                    <IoClose size={22} />
-                </button>
-            </div>
+    const handleConfirmArrival = () => {
+        console.log("[ARRIVAL CONFIRMED BY USER]");
+        stopRepeatingArrivalSound();
+        dispatch(clearArrivalPopup());
+        if (arrivalPopup.bookingId) {
+            navigate("/my-bookings");
+        }
+    };
 
-            <div className="flex items-center justify-end gap-2 mt-0.5">
-                <button
-                    onClick={() => {
-                        dispatch(clearArrivalPopup());
-                        navigate("/my-bookings");
-                    }}
-                    className="px-4 py-1.5 bg-white text-orange-600 font-extrabold text-xs rounded-xl hover:bg-orange-50 transition-all shadow-md active:scale-95 cursor-pointer"
-                >
-                    View Status
-                </button>
+    return (
+        <div className="fixed inset-0 z-[999999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-gradient-to-br from-orange-600 via-amber-600 to-orange-500 text-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border-2 border-orange-200 space-y-5 text-center animate-bounce-short">
+                <div className="w-20 h-20 mx-auto rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border-2 border-white/40 shadow-inner">
+                    <IoLocationSharp size={44} className="text-yellow-300 animate-pulse" />
+                </div>
+
+                <div>
+                    <span className="bg-white/20 text-yellow-200 text-xs font-black uppercase tracking-wider px-3 py-1 rounded-full border border-white/30">
+                        📍 Arrival Notification
+                    </span>
+                    <h2 className="text-2xl font-black text-white mt-3 leading-tight drop-shadow-md">
+                        Pandit Ji Has Arrived!
+                    </h2>
+                    <p className="text-sm text-orange-100 mt-2 font-medium leading-relaxed">
+                        {arrivalPopup.message || "Pandit Ji has arrived at your location. Please confirm that Pandit Ji has actually reached your venue."}
+                    </p>
+                </div>
+
+                <div className="p-3 bg-black/20 rounded-2xl border border-white/20 text-xs font-semibold text-orange-100">
+                    🔊 Repeating voice alert will continue until you confirm arrival.
+                </div>
+
+                <div className="pt-2">
+                    <button
+                        type="button"
+                        onClick={handleConfirmArrival}
+                        className="w-full py-3.5 bg-white text-orange-600 hover:bg-orange-50 font-black text-base rounded-2xl shadow-xl transition active:scale-95 cursor-pointer flex items-center justify-center gap-2"
+                    >
+                        <IoCheckmarkCircle size={22} className="text-green-600" />
+                        <span>✓ Confirm Arrival</span>
+                    </button>
+                </div>
             </div>
         </div>
     );

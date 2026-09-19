@@ -85,7 +85,7 @@ function Navbar({ searchQuery = "", setSearchQuery = () => {}, onSearchSubmit = 
           <img
             src="/logo.png"
             alt="Maharaj Ji"
-            className="w-11 h-11 sm:w-12 sm:h-12 rounded-full object-cover overflow-hidden aspect-square shadow-sm border-2 border-orange-400"
+            className="w-12 h-12 sm:w-14 sm:h-14 rounded-full object-cover overflow-hidden aspect-square shadow-md border-2 border-orange-400"
           />
           <h1 className="text-xl sm:text-2xl font-black text-[#ff4d2d] tracking-tight">Maharaj Ji</h1>
         </div>
