@@ -1,7 +1,8 @@
 import { useEffect } from "react";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
-import { setMyBookings, updateBookingStatusInState } from "../redux/userSlice";
+import { setMyBookings, updateBookingStatusInState, setArrivalPopup } from "../redux/userSlice";
+import { playPanditArrivedSound } from "../utils/audio";
 import { socket } from "../socket";
 
 const serverUrl = import.meta.env.VITE_SERVER_URL || "http://localhost:8000";
@@ -32,6 +33,15 @@ const useGetMyBookings = () => {
         const handleStatusUpdate = (updatedBooking) => {
             console.log("[SOCKET RECEIVED] booking_status_updated:", updatedBooking);
             dispatch(updateBookingStatusInState(updatedBooking));
+
+            if (updatedBooking?.status === "reached") {
+                playPanditArrivedSound(updatedBooking._id);
+                dispatch(setArrivalPopup({
+                    title: "Pandit Ji Reached Venue! 🙏",
+                    message: `${updatedBooking.pandit?.name || 'Pandit Ji'} has reached your venue location.`,
+                    bookingId: updatedBooking._id
+                }));
+            }
         };
 
         socket.on("booking_status_updated", handleStatusUpdate);

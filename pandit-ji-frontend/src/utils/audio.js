@@ -106,3 +106,42 @@ export const playBookingConfirmationSound = (bookingId) => {
         return false;
     }
 };
+
+const playedArrivalIds = new Set();
+
+export const playPanditArrivedSound = (id = null) => {
+    if (!isSoundEnabled()) {
+        console.log("[AUDIO] Sound disabled in settings");
+        return false;
+    }
+
+    const baseId = id ? id.toString().replace("_reached", "") : "default";
+
+    if (playedArrivalIds.has(baseId)) {
+        console.log(`[AUDIO DUP GUARD] Arrival sound already played for ID: ${baseId}`);
+        return false;
+    }
+
+    playedArrivalIds.add(baseId);
+    if (playedArrivalIds.size > 200) {
+        const first = playedArrivalIds.values().next().value;
+        playedArrivalIds.delete(first);
+    }
+
+    try {
+        const audio = new Audio("/pandit-arrived.aac");
+        audio.volume = 1.0;
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+            playPromise.catch(err => {
+                console.warn("[AUDIO PLAYBACK WARN] HTML5 Audio autoplay prevented by browser:", err.message);
+                playNotificationSound(baseId);
+            });
+        }
+        return true;
+    } catch (err) {
+        console.warn("[AUDIO ERROR] Failed to play arrival sound:", err.message);
+        return false;
+    }
+};
+

@@ -8,6 +8,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { setUserData, markNotificationReadInState, markAllNotificationsReadInState, setSoundEnabledState } from "../redux/userSlice";
 import { useNavigate } from "react-router-dom";
 import useNotifications from "../hooks/useNotifications";
+import ArrivalNotificationToast from "./ArrivalNotificationToast";
 
 const serverUrl = import.meta.env.VITE_SERVER_URL || "http://localhost:8000";
 
@@ -73,7 +74,9 @@ function Navbar({ searchQuery = "", setSearchQuery = () => {}, onSearchSubmit = 
   };
 
   return (
-    <div className="w-full h-[75px] md:h-[85px] flex items-center px-3 sm:px-6 md:px-8 fixed top-0 z-[9999] bg-[#fff9f6] border-b border-orange-100 shadow-sm">
+    <>
+      <ArrivalNotificationToast />
+      <div className="w-full h-[75px] md:h-[85px] flex items-center px-3 sm:px-6 md:px-8 fixed top-0 z-[9999] bg-[#fff9f6] border-b border-orange-100 shadow-sm">
       
       {/* ================= MOBILE VIEW (< md) ================= */}
       <div className="relative flex w-full items-center justify-between md:hidden px-1 h-full">
@@ -410,6 +413,7 @@ function Navbar({ searchQuery = "", setSearchQuery = () => {}, onSearchSubmit = 
         </div>
       )}
     </div>
+    </>
   );
 }
 

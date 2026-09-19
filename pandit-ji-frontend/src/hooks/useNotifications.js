@@ -2,8 +2,8 @@ import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
 import { socket } from "../socket";
-import { setNotifications, addNotification } from "../redux/userSlice";
-import { playNotificationSound } from "../utils/audio";
+import { setNotifications, addNotification, setArrivalPopup } from "../redux/userSlice";
+import { playNotificationSound, playPanditArrivedSound } from "../utils/audio";
 
 const serverUrl = import.meta.env.VITE_SERVER_URL || "http://localhost:8000";
 
@@ -50,8 +50,16 @@ export default function useNotifications() {
 
             dispatch(addNotification(notif));
 
-            // Play alert sound if sound enabled
-            if (soundEnabled) {
+            const isReached = notif.type === "booking_reached" || notif.data?.status === "reached";
+
+            if (isReached) {
+                playPanditArrivedSound(notif.bookingId || notif._id);
+                dispatch(setArrivalPopup({
+                    title: notif.title || "Pandit Ji Reached Venue! 🙏",
+                    message: notif.message || "Pandit Ji has reached your venue location.",
+                    bookingId: notif.bookingId || notif.data?.bookingId
+                }));
+            } else if (soundEnabled) {
                 playNotificationSound(notif._id);
             }
         };
@@ -65,3 +73,4 @@ export default function useNotifications() {
         };
     }, [userData?._id, userData?.role, soundEnabled, dispatch]);
 }
+

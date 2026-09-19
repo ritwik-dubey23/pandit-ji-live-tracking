@@ -8,7 +8,8 @@ const userSlice = createSlice({
         myBookings: [],
         notifications: [],
         unreadCount: 0,
-        soundEnabled: localStorage.getItem("pandit_ji_sound_enabled") !== "false"
+        soundEnabled: localStorage.getItem("pandit_ji_sound_enabled") !== "false",
+        arrivalPopup: null
     },
     reducers: {
         setUserData: (state, action) => {
@@ -59,6 +60,12 @@ const userSlice = createSlice({
         setSoundEnabledState: (state, action) => {
             state.soundEnabled = action.payload;
             localStorage.setItem("pandit_ji_sound_enabled", action.payload ? "true" : "false");
+        },
+        setArrivalPopup: (state, action) => {
+            state.arrivalPopup = action.payload;
+        },
+        clearArrivalPopup: (state) => {
+            state.arrivalPopup = null;
         }
     }
 });
@@ -73,7 +80,9 @@ export const {
     addNotification,
     markNotificationReadInState,
     markAllNotificationsReadInState,
-    setSoundEnabledState
+    setSoundEnabledState,
+    setArrivalPopup,
+    clearArrivalPopup
 } = userSlice.actions;
 
 export default userSlice.reducer;
