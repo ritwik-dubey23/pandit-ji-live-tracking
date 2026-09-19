@@ -126,11 +126,14 @@ function PanditDashboard() {
     const handleLogout = async () => {
         try {
             await axios.post(`${serverUrl}/api/auth/signout`, {}, { withCredentials: true });
-            dispatch(setUserData(null));
-            navigate("/signin");
         } catch (error) {
+            console.warn("Signout API call completed with warning:", error.message);
+        } finally {
+            localStorage.removeItem("pandit_ji_token");
+            sessionStorage.clear();
             dispatch(setUserData(null));
-            navigate("/signin");
+            dispatch(setMyPanditProfile(null));
+            navigate("/signin", { replace: true });
         }
     };
 

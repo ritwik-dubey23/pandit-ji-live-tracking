@@ -33,11 +33,14 @@ function Navbar({ searchQuery = "", setSearchQuery = () => {}, onSearchSubmit = 
         {},
         { withCredentials: true }
       );
-      dispatch(setUserData(null));
-      setShowMenu(false);
-      navigate("/signin");
     } catch (error) {
       console.log(error);
+    } finally {
+      localStorage.removeItem("pandit_ji_token");
+      sessionStorage.clear();
+      dispatch(setUserData(null));
+      setShowMenu(false);
+      navigate("/signin", { replace: true });
     }
   };
 
