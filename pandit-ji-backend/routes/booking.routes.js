@@ -6,7 +6,8 @@ import {
     updateBookingStatus,
     acceptBooking,
     rejectBooking,
-    submitBookingReview
+    submitBookingReview,
+    confirmUserArrival
 } from "../controllers/booking.controller.js";
 import isAuth from "../middlewares/isAuth.js";
 
@@ -27,6 +28,10 @@ bookingRouter.post("/status/:id", isAuth, updateBookingStatus);
 bookingRouter.put("/status/:id", isAuth, updateBookingStatus);
 bookingRouter.post("/:id/status", isAuth, updateBookingStatus);
 bookingRouter.put("/:id/status", isAuth, updateBookingStatus);
+
+// User Arrival Confirmation route
+bookingRouter.post("/:id/confirm-arrival", isAuth, confirmUserArrival);
+bookingRouter.put("/:id/confirm-arrival", isAuth, confirmUserArrival);
 
 // Rating & Review route
 bookingRouter.post("/:id/rate", isAuth, submitBookingReview);

@@ -153,10 +153,15 @@ function PanditBookingCard({ booking }) {
                             </button>
                             <button
                                 onClick={() => handleUpdateStatus("completed")}
-                                disabled={loading}
-                                className="px-4 py-2.5 text-xs font-black text-white bg-blue-600 hover:bg-blue-700 shadow-md rounded-xl transition duration-150 cursor-pointer flex items-center gap-1.5 min-h-[44px]"
+                                disabled={loading || !booking.userArrivalConfirmed}
+                                title={!booking.userArrivalConfirmed ? "Waiting for user to confirm arrival" : "Mark ceremony as completed"}
+                                className={`px-4 py-2.5 text-xs font-black rounded-xl transition duration-150 flex items-center gap-1.5 min-h-[44px] ${
+                                    !booking.userArrivalConfirmed
+                                        ? "bg-gray-200 text-gray-500 cursor-not-allowed border border-gray-300 shadow-none"
+                                        : "bg-blue-600 hover:bg-blue-700 text-white shadow-md cursor-pointer"
+                                }`}
                             >
-                                <FaCheckDouble size={14} /> Mark Completed
+                                <FaCheckDouble size={14} /> {!booking.userArrivalConfirmed ? "🔒 Mark Completed (Locked)" : "Mark Completed"}
                             </button>
                         </>
                     )}

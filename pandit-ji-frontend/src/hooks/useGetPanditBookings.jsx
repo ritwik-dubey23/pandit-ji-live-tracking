@@ -44,12 +44,21 @@ const useGetPanditBookings = () => {
             dispatch(updatePanditBookingStatusInState(updatedBooking));
         };
 
+        const handleArrivalConfirmed = (data) => {
+            console.log("[SOCKET RECEIVED] arrival_confirmed_by_user:", data);
+            if (data?.booking) {
+                dispatch(updatePanditBookingStatusInState(data.booking));
+            }
+        };
+
         socket.on("new_booking", handleNewBooking);
         socket.on("booking_status_updated", handleStatusUpdate);
+        socket.on("arrival_confirmed_by_user", handleArrivalConfirmed);
 
         return () => {
             socket.off("new_booking", handleNewBooking);
             socket.off("booking_status_updated", handleStatusUpdate);
+            socket.off("arrival_confirmed_by_user", handleArrivalConfirmed);
         };
     }, [dispatch, userData]);
 };

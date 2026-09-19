@@ -146,6 +146,13 @@ export const updateBookingStatus = async (req, res) => {
             return res.status(404).json({ message: "Booking not found." });
         }
 
+        // STRICT BACKEND VALIDATION: Completion lock if user hasn't confirmed arrival
+        if (status === "completed" && !booking.userArrivalConfirmed) {
+            return res.status(400).json({
+                message: "Cannot complete booking until user confirms Pandit Ji's arrival."
+            });
+        }
+
         booking.status = status;
         await booking.save();
 
@@ -335,4 +342,50 @@ export const acceptBooking = async (req, res) => {
 export const rejectBooking = async (req, res) => {
     req.body = { status: "rejected" };
     return updateBookingStatus(req, res);
+};
+
+export const confirmUserArrival = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const booking = await Booking.findById(id).populate("pandit").populate("user", "fullName email mobile");
+        if (!booking) {
+            return res.status(404).json({ message: "Booking not found." });
+        }
+
+        booking.userArrivalConfirmed = true;
+        await booking.save();
+
+        try {
+            const io = getIo();
+            const userId = booking.user._id ? booking.user._id.toString() : booking.user.toString();
+            const panditUserId = booking.pandit.user ? booking.pandit.user.toString() : booking.pandit.toString();
+
+            console.log(`[SOCKET] Emitting arrival_confirmed_by_user for booking ${id}`);
+            io.to(`pandit_${panditUserId}`).emit("arrival_confirmed_by_user", { bookingId: booking._id, booking });
+            io.to(`user_${userId}`).emit("arrival_confirmed_by_user", { bookingId: booking._id, booking });
+            io.to(`booking_${id}`).emit("arrival_confirmed_by_user", { bookingId: booking._id, booking });
+            io.to(`user_${userId}`).emit("booking_status_updated", booking);
+            io.to(`pandit_${panditUserId}`).emit("booking_status_updated", booking);
+
+            await createAndEmitNotification({
+                recipientId: panditUserId,
+                senderId: userId,
+                title: "Arrival Confirmed! ✅",
+                message: `User ${booking.userName} has confirmed your arrival at the venue location.`,
+                type: "arrival_confirmed",
+                bookingId: booking._id,
+                data: { bookingId: booking._id, userArrivalConfirmed: true }
+            });
+        } catch (socketErr) {
+            console.error("Socket emit failed in confirmUserArrival:", socketErr.message);
+        }
+
+        return res.status(200).json({
+            message: "Pandit Ji arrival confirmed successfully!",
+            booking
+        });
+    } catch (error) {
+        console.error("confirmUserArrival error:", error);
+        return res.status(500).json({ message: "Error confirming arrival." });
+    }
 };

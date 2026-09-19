@@ -1,23 +1,39 @@
-import React from "react";
+import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { clearArrivalPopup } from "../redux/userSlice";
+import { clearArrivalPopup, updateBookingStatusInState } from "../redux/userSlice";
 import { useNavigate } from "react-router-dom";
 import { IoLocationSharp, IoCheckmarkCircle } from "react-icons/io5";
 import { stopRepeatingArrivalSound } from "../utils/audio";
+import axios from "axios";
+import { ClipLoader } from "react-spinners";
+
+const serverUrl = import.meta.env.VITE_SERVER_URL || "http://localhost:8000";
 
 export default function ArrivalNotificationToast() {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const { arrivalPopup } = useSelector((state) => state.user);
+    const [confirming, setConfirming] = useState(false);
 
     if (!arrivalPopup) return null;
 
-    const handleConfirmArrival = () => {
-        console.log("[ARRIVAL CONFIRMED BY USER]");
-        stopRepeatingArrivalSound();
-        dispatch(clearArrivalPopup());
-        if (arrivalPopup.bookingId) {
-            navigate("/my-bookings");
+    const handleConfirmArrival = async () => {
+        console.log("[ARRIVAL CONFIRMED BY USER]", arrivalPopup);
+        try {
+            setConfirming(true);
+            const bookingId = arrivalPopup.bookingId || arrivalPopup.booking?._id;
+            if (bookingId) {
+                const res = await axios.put(`${serverUrl}/api/booking/${bookingId}/confirm-arrival`, {}, { withCredentials: true });
+                if (res.data?.booking) {
+                    dispatch(updateBookingStatusInState(res.data.booking));
+                }
+            }
+        } catch (err) {
+            console.error("Error confirming arrival:", err);
+        } finally {
+            setConfirming(false);
+            stopRepeatingArrivalSound();
+            dispatch(clearArrivalPopup());
         }
     };
 
@@ -48,10 +64,17 @@ export default function ArrivalNotificationToast() {
                     <button
                         type="button"
                         onClick={handleConfirmArrival}
+                        disabled={confirming}
                         className="w-full py-3.5 bg-white text-orange-600 hover:bg-orange-50 font-black text-base rounded-2xl shadow-xl transition active:scale-95 cursor-pointer flex items-center justify-center gap-2"
                     >
-                        <IoCheckmarkCircle size={22} className="text-green-600" />
-                        <span>✓ Confirm Arrival</span>
+                        {confirming ? (
+                            <ClipLoader size={20} color="#ff4d2d" />
+                        ) : (
+                            <>
+                                <IoCheckmarkCircle size={22} className="text-green-600" />
+                                <span>✓ Confirm Arrival</span>
+                            </>
+                        )}
                     </button>
                 </div>
             </div>

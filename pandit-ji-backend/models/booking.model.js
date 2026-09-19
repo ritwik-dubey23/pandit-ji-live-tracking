@@ -85,6 +85,10 @@ const bookingSchema = new mongoose.Schema({
         enum: ["pending", "accepted", "on_the_way", "arriving", "reached", "started", "completed", "cancelled", "rejected"],
         default: "pending"
     },
+    userArrivalConfirmed: {
+        type: Boolean,
+        default: false
+    },
     isRated: {
         type: Boolean,
         default: false

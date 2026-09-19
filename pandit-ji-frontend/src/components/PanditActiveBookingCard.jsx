@@ -176,18 +176,41 @@ function PanditActiveBookingCard({ booking, onViewMap }) {
                 </button>
 
                 {nextStep ? (
-                    <button
-                        type="button"
-                        onClick={() => handleNextStatus(nextStep.id)}
-                        disabled={loading}
-                        className="py-3 px-4 rounded-2xl text-xs font-black text-white bg-green-600 hover:bg-green-700 shadow-md transition duration-150 cursor-pointer flex items-center justify-center gap-2 min-h-[44px]"
-                    >
-                        {loading ? <ClipLoader size={16} color="#fff" /> : (
-                            <>
-                                MARK AS: {nextStep.label.toUpperCase()} <FaChevronRight />
-                            </>
-                        )}
-                    </button>
+                    (() => {
+                        const isCompletionLocked = nextStep.id === "completed" && !booking.userArrivalConfirmed;
+
+                        if (isCompletionLocked) {
+                            return (
+                                <div className="flex flex-col gap-1.5">
+                                    <button
+                                        type="button"
+                                        disabled={true}
+                                        className="py-3 px-4 rounded-2xl text-xs font-black text-gray-500 bg-gray-200 border border-gray-300 cursor-not-allowed flex items-center justify-center gap-2 min-h-[44px]"
+                                    >
+                                        🔒 MARK AS COMPLETED (LOCKED)
+                                    </button>
+                                    <span className="text-[11px] font-extrabold text-amber-700 bg-amber-50 px-3 py-1 rounded-xl border border-amber-200 text-center">
+                                        ⏳ Waiting for user to confirm arrival...
+                                    </span>
+                                </div>
+                            );
+                        }
+
+                        return (
+                            <button
+                                type="button"
+                                onClick={() => handleNextStatus(nextStep.id)}
+                                disabled={loading}
+                                className="py-3 px-4 rounded-2xl text-xs font-black text-white bg-green-600 hover:bg-green-700 shadow-md transition duration-150 cursor-pointer flex items-center justify-center gap-2 min-h-[44px]"
+                            >
+                                {loading ? <ClipLoader size={16} color="#fff" /> : (
+                                    <>
+                                        MARK AS: {nextStep.label.toUpperCase()} <FaChevronRight />
+                                    </>
+                                )}
+                            </button>
+                        );
+                    })()
                 ) : (
                     <div className="py-3 px-4 rounded-2xl text-xs font-black text-center text-green-800 bg-green-100 border border-green-300 flex items-center justify-center gap-1">
                         <FaCheckDouble /> BOOKING COMPLETED

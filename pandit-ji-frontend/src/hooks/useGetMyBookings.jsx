@@ -22,6 +22,21 @@ const useGetMyBookings = () => {
             try {
                 const res = await axios.get(`${serverUrl}/api/booking/user-bookings`, { withCredentials: true });
                 dispatch(setMyBookings(res.data));
+
+                if (Array.isArray(res.data)) {
+                    const unconfirmedReached = res.data.find(b =>
+                        (b.status === "reached" || b.status === "started") && !b.userArrivalConfirmed
+                    );
+                    if (unconfirmedReached) {
+                        playPanditArrivedSound(unconfirmedReached._id);
+                        dispatch(setArrivalPopup({
+                            title: "Pandit Ji Reached Venue! 🙏",
+                            message: `${unconfirmedReached.pandit?.name || 'Pandit Ji'} has reached your venue location. Please confirm arrival.`,
+                            bookingId: unconfirmedReached._id,
+                            booking: unconfirmedReached
+                        }));
+                    }
+                }
             } catch (error) {
                 console.error("Error fetching user bookings:", error);
             }
@@ -34,12 +49,13 @@ const useGetMyBookings = () => {
             console.log("[SOCKET RECEIVED] booking_status_updated:", updatedBooking);
             dispatch(updateBookingStatusInState(updatedBooking));
 
-            if (updatedBooking?.status === "reached") {
+            if (updatedBooking?.status === "reached" && !updatedBooking?.userArrivalConfirmed) {
                 playPanditArrivedSound(updatedBooking._id);
                 dispatch(setArrivalPopup({
                     title: "Pandit Ji Reached Venue! 🙏",
                     message: `${updatedBooking.pandit?.name || 'Pandit Ji'} has reached your venue location.`,
-                    bookingId: updatedBooking._id
+                    bookingId: updatedBooking._id,
+                    booking: updatedBooking
                 }));
             }
         };

@@ -111,11 +111,17 @@ const playedArrivalIds = new Set();
 
 let repeatingArrivalInterval = null;
 let activeArrivalBookingId = null;
+let currentArrivalAudioInstance = null;
 
 export const playPanditArrivedAudioOnce = () => {
     try {
-        const audio = new Audio("/pandit-arrived.aac");
+        if (currentArrivalAudioInstance) {
+            currentArrivalAudioInstance.pause();
+            currentArrivalAudioInstance.currentTime = 0;
+        }
+        const audio = new Audio("/pandit-arrived.mp3");
         audio.volume = 1.0;
+        currentArrivalAudioInstance = audio;
         const playPromise = audio.play();
         if (playPromise !== undefined) {
             playPromise.catch(err => {
@@ -146,7 +152,7 @@ export const startRepeatingArrivalSound = (bookingId = null) => {
 
     repeatingArrivalInterval = setInterval(() => {
         playPanditArrivedAudioOnce();
-    }, 8000);
+    }, 6000);
 
     return true;
 };
@@ -155,6 +161,15 @@ export const stopRepeatingArrivalSound = () => {
     if (repeatingArrivalInterval) {
         clearInterval(repeatingArrivalInterval);
         repeatingArrivalInterval = null;
+    }
+    if (currentArrivalAudioInstance) {
+        try {
+            currentArrivalAudioInstance.pause();
+            currentArrivalAudioInstance.currentTime = 0;
+        } catch (e) {
+            console.warn("Error pausing arrival audio:", e);
+        }
+        currentArrivalAudioInstance = null;
     }
     activeArrivalBookingId = null;
 };
