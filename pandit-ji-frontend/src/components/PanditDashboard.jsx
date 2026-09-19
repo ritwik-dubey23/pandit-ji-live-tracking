@@ -309,50 +309,62 @@ function PanditDashboard() {
     const completedBookings = panditBookings.filter(b => b.status === "completed");
     const totalEarnings = completedBookings.reduce((sum, b) => sum + (b.totalAmount || 0), 0);
 
+    const [showAccountDropdown, setShowAccountDropdown] = useState(false);
+
     return (
         <div className="min-h-screen bg-[#fff9f6] flex flex-col justify-between pb-20 md:pb-8">
-            {/* PANDIT DASHBOARD HEADER */}
-            <header className="bg-white border-b border-orange-100 sticky top-0 z-30 shadow-xs">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between">
-                    {/* Left Brand / Profile Avatar Upload */}
-                    <div className="flex items-center gap-3">
-                        <div className="relative group cursor-pointer">
-                            <img
-                                src={myPanditProfile?.profileImage || "/logo.png"}
-                                alt={myPanditProfile?.name || "Pandit Ji"}
-                                className="w-12 h-12 rounded-full object-cover border-2 border-amber-400 shadow-xs"
-                            />
-                            <label className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition cursor-pointer">
-                                {uploadingProfilePhoto ? <ClipLoader size={14} color="#fff" /> : <FaCamera size={14} />}
-                                <input type="file" accept="image/*" className="hidden" onChange={handleProfilePhotoChange} />
-                            </label>
-                        </div>
-                        <div>
-                            <h2 className="text-base sm:text-lg font-black text-gray-900 leading-tight">
-                                Namaste, {myPanditProfile?.name || "Pandit Ji"} 🙏
-                            </h2>
-                            <span className="text-[11px] font-bold text-gray-500 block">
-                                Partner Service Provider Dashboard
+            {/* PANDIT DASHBOARD STANDARDIZED NAVBAR */}
+            <header className="bg-[#fff9f6] border-b border-orange-100 sticky top-0 z-[9999] shadow-sm h-[75px] md:h-[85px] flex items-center px-3 sm:px-6 lg:px-8">
+                <div className="max-w-7xl mx-auto w-full flex items-center justify-between">
+                    {/* Left Brand - Maharaj Ji Logo */}
+                    <div className="flex items-center gap-2.5 cursor-pointer shrink-0" onClick={() => navigate("/")}>
+                        <img
+                            src="/logo.png"
+                            alt="Maharaj Ji Partner"
+                            className="w-10 h-10 sm:w-11 sm:h-11 rounded-full object-cover aspect-square shadow-sm border-2 border-orange-400"
+                        />
+                        <div className="flex items-center gap-2">
+                            <h1 className="text-xl sm:text-2xl font-black text-[#ff4d2d] tracking-tight">Maharaj Ji</h1>
+                            <span className="hidden sm:inline-block bg-orange-100 text-[#ff4d2d] text-[10px] font-black px-2 py-0.5 rounded-md border border-orange-200">
+                                PARTNER
                             </span>
                         </div>
                     </div>
 
-                    {/* Right Actions: Bell Icon, Online Toggle, Logout */}
-                    <div className="flex items-center gap-3">
+                    {/* Right Actions: Online/Offline Toggle, Bell Icon, Account Control Dropdown */}
+                    <div className="flex items-center gap-2 sm:gap-3">
+                        {/* Compact Online/Offline Toggle Button */}
+                        <button
+                            type="button"
+                            onClick={handleToggleOnline}
+                            disabled={togglingOnline}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-full text-xs font-black transition shadow-xs cursor-pointer min-h-[40px] ${
+                                isOnline
+                                    ? "bg-green-600 text-white hover:bg-green-700"
+                                    : "bg-gray-700 text-gray-200 hover:bg-gray-800"
+                            }`}
+                            title="Toggle Online Status"
+                        >
+                            <FaPowerOff className={isOnline ? "animate-pulse" : ""} size={12} />
+                            <span className="hidden sm:inline">{isOnline ? "ONLINE" : "OFFLINE"}</span>
+                            <span className="sm:hidden text-[10px]">{isOnline ? "ON" : "OFF"}</span>
+                        </button>
+
                         {/* Notification Bell Dropdown */}
                         <div className="relative">
                             <button
                                 type="button"
                                 onClick={() => {
                                     setShowNotificationsDropdown(!showNotificationsDropdown);
+                                    setShowAccountDropdown(false);
                                     if (!showNotificationsDropdown) fetchNotifications();
                                 }}
-                                className="relative p-2.5 rounded-full text-gray-700 hover:bg-orange-50 hover:text-[#ff4d2d] transition cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center border border-gray-200 bg-white"
+                                className="relative p-2 sm:p-2.5 rounded-full text-gray-700 hover:bg-orange-100 hover:text-[#ff4d2d] transition cursor-pointer min-h-[40px] min-w-[40px] flex items-center justify-center border border-orange-200 bg-white shadow-xs"
                                 title="Notifications"
                             >
-                                <FaBell size={18} />
+                                <FaBell size={16} />
                                 {unreadCount > 0 && (
-                                    <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center border-2 border-white animate-bounce">
+                                    <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] font-black w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center border-2 border-white animate-bounce">
                                         {unreadCount}
                                     </span>
                                 )}
@@ -360,7 +372,7 @@ function PanditDashboard() {
 
                             {/* Notification Popup Modal / Dropdown */}
                             {showNotificationsDropdown && (
-                                <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-3xl shadow-2xl border border-orange-100 z-50 overflow-hidden">
+                                <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-3xl shadow-2xl border border-orange-100 z-[99999] overflow-hidden">
                                     <div className="p-4 bg-gradient-to-r from-orange-500 to-amber-500 text-white flex items-center justify-between">
                                         <div className="flex items-center gap-2">
                                             <FaBell size={16} />
@@ -405,30 +417,122 @@ function PanditDashboard() {
                             )}
                         </div>
 
-                        <button
-                            type="button"
-                            onClick={handleToggleOnline}
-                            disabled={togglingOnline}
-                            className={`flex items-center gap-2 px-3.5 py-2 rounded-full text-xs font-black transition shadow-xs cursor-pointer min-h-[44px] ${
-                                isOnline
-                                    ? "bg-green-600 text-white hover:bg-green-700"
-                                    : "bg-gray-700 text-gray-200 hover:bg-gray-800"
-                            }`}
-                        >
-                            <FaPowerOff className={isOnline ? "animate-pulse" : ""} />
-                            <span>{isOnline ? "ONLINE" : "OFFLINE"}</span>
-                        </button>
+                        {/* Profile / Account Control Dropdown Trigger */}
+                        <div className="relative">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setShowAccountDropdown(!showAccountDropdown);
+                                    setShowNotificationsDropdown(false);
+                                }}
+                                className="flex items-center gap-2 p-1.5 sm:px-3 sm:py-1.5 rounded-full border border-orange-200 bg-white hover:bg-orange-50 transition cursor-pointer min-h-[40px] shadow-xs"
+                            >
+                                <img
+                                    src={myPanditProfile?.profileImage || "/logo.png"}
+                                    alt={myPanditProfile?.name || "Pandit Ji"}
+                                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover border border-orange-400 aspect-square"
+                                />
+                                <span className="hidden md:inline-block text-xs font-black text-gray-800 max-w-[100px] truncate">
+                                    {myPanditProfile?.name || userData?.fullName || "Pandit Ji"}
+                                </span>
+                            </button>
 
-                        <button
-                            onClick={handleLogout}
-                            title="Logout"
-                            className="hidden md:flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 cursor-pointer min-h-[44px]"
-                        >
-                            <FaSignOutAlt /> Logout
-                        </button>
+                            {/* Account Dropdown Menu */}
+                            {showAccountDropdown && (
+                                <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-orange-100 z-[99999] overflow-hidden p-2">
+                                    <div className="p-3 bg-orange-50 rounded-xl mb-1 border border-orange-100 flex items-center gap-3">
+                                        <img
+                                            src={myPanditProfile?.profileImage || "/logo.png"}
+                                            alt={myPanditProfile?.name || "Pandit Ji"}
+                                            className="w-10 h-10 rounded-full object-cover border border-orange-400"
+                                        />
+                                        <div>
+                                            <h4 className="font-extrabold text-xs text-gray-900 truncate">
+                                                {myPanditProfile?.name || userData?.fullName || "Pandit Ji"}
+                                            </h4>
+                                            <span className="text-[10px] text-gray-500 font-bold block">
+                                                Vedic Acharya / Partner
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-0.5 text-xs font-bold text-gray-700">
+                                        <button
+                                            type="button"
+                                            onClick={() => { setActiveTab("requests"); setShowAccountDropdown(false); }}
+                                            className="w-full text-left px-3 py-2.5 rounded-xl hover:bg-orange-50 hover:text-[#ff4d2d] flex items-center gap-2 transition"
+                                        >
+                                            <FaBolt className="text-amber-500" /> Booking Requests ({pendingRequests.length})
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => { setActiveTab("active"); setShowAccountDropdown(false); }}
+                                            className="w-full text-left px-3 py-2.5 rounded-xl hover:bg-orange-50 hover:text-[#ff4d2d] flex items-center gap-2 transition"
+                                        >
+                                            <FaPrayingHands className="text-green-600" /> Active Booking ({activeBookings.length})
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => { setActiveTab("services"); setShowAccountDropdown(false); }}
+                                            className="w-full text-left px-3 py-2.5 rounded-xl hover:bg-orange-50 hover:text-[#ff4d2d] flex items-center gap-2 transition"
+                                        >
+                                            <FaTools className="text-[#ff4d2d]" /> Manage Services & Pricing
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => { setActiveTab("profile"); setShowAccountDropdown(false); }}
+                                            className="w-full text-left px-3 py-2.5 rounded-xl hover:bg-orange-50 hover:text-[#ff4d2d] flex items-center gap-2 transition"
+                                        >
+                                            <FaUserEdit className="text-blue-600" /> Profile / Edit Profile
+                                        </button>
+                                        <div className="border-t border-gray-100 pt-1 mt-1">
+                                            <button
+                                                type="button"
+                                                onClick={handleLogout}
+                                                className="w-full text-left px-3 py-2.5 rounded-xl text-red-600 hover:bg-red-50 flex items-center gap-2 transition font-extrabold"
+                                            >
+                                                <FaSignOutAlt /> Logout
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             </header>
+
+            {/* DASHBOARD HERO BANNER (CLEAN & MODERN) */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 w-full">
+                <div className="relative w-full rounded-3xl overflow-hidden bg-gradient-to-r from-orange-600 via-amber-600 to-orange-500 text-white p-6 sm:p-8 shadow-xl border-2 border-orange-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                    <div className="space-y-2 max-w-xl z-10">
+                        <span className="bg-white/20 backdrop-blur-md text-yellow-200 text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider border border-white/20">
+                            🕉️ Partner Acharya Portal
+                        </span>
+                        <h1 className="text-2xl sm:text-4xl font-black text-white tracking-tight drop-shadow-md leading-tight">
+                            Namaste, {myPanditProfile?.name || userData?.fullName || "Ritwik Dubey"} 🙏
+                        </h1>
+                        <p className="text-orange-100 text-xs sm:text-sm font-semibold leading-relaxed">
+                            Ready to serve your devotees today? Manage your incoming booking requests, active ritual ceremonies, and service prices easily.
+                        </p>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-3 w-full md:w-auto z-10">
+                        <div className="bg-white/15 backdrop-blur-md p-3 rounded-2xl border border-white/20 text-center">
+                            <span className="text-[10px] uppercase font-bold text-orange-200 block">Earnings</span>
+                            <span className="text-lg sm:text-xl font-black text-white">₹{totalEarnings}</span>
+                        </div>
+                        <div className="bg-white/15 backdrop-blur-md p-3 rounded-2xl border border-white/20 text-center">
+                            <span className="text-[10px] uppercase font-bold text-orange-200 block">Requests</span>
+                            <span className="text-lg sm:text-xl font-black text-yellow-300">{pendingRequests.length}</span>
+                        </div>
+                        <div className="bg-white/15 backdrop-blur-md p-3 rounded-2xl border border-white/20 text-center">
+                            <span className="text-[10px] uppercase font-bold text-orange-200 block">Active</span>
+                            <span className="text-lg sm:text-xl font-black text-green-300">{activeBookings.length}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             {/* DASHBOARD BODY CONTAINER */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full grid grid-cols-1 lg:grid-cols-4 gap-6">

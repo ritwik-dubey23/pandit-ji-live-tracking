@@ -2,6 +2,7 @@ import React from 'react';
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useSelector } from 'react-redux';
 import useGetCurrUser from './hooks/useGetCurrUser';
+import ScrollToTop from './components/ScrollToTop';
 
 import Home from './pages/Home';
 import SignIn from './pages/SignIn';
@@ -20,7 +21,9 @@ function App() {
     const isPandit = userData && userData.role === "pandit";
 
     return (
-        <Routes>
+        <>
+            <ScrollToTop />
+            <Routes>
             {/* User Routes (Redirect Pandit to /pandit-dashboard) */}
             <Route path='/' element={isPandit ? <Navigate to="/pandit-dashboard" /> : <Home />} />
             <Route path='/signin' element={!userData ? <SignIn /> : (isPandit ? <Navigate to="/pandit-dashboard" /> : <Navigate to="/" />)} />
@@ -45,6 +48,7 @@ function App() {
                 isPandit ? <PanditDashboard /> : <Navigate to="/signin" />
             } />
         </Routes>
+        </>
     );
 }
 

@@ -129,38 +129,39 @@ function BookingModal({ pandit, initialService, onClose }) {
     };
 
     return (
-        <div className="fixed inset-0 z-[99999] flex items-start justify-center p-4 pt-16 md:pt-20 bg-black/70 backdrop-blur-xs overflow-y-auto">
-            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden border border-gray-100 my-4 sm:my-6 transition-all duration-300">
+        <div className="fixed inset-0 z-[99999] flex items-start justify-center p-2 sm:p-4 pt-14 md:pt-20 bg-black/75 backdrop-blur-xs overflow-y-auto">
+            <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-xl overflow-hidden border border-orange-100 my-2 sm:my-6 transition-all duration-300 max-h-[90vh] flex flex-col">
                 {/* Modal Header */}
-                <div className="p-5 text-white flex items-center justify-between" style={{ backgroundColor: primaryColor }}>
+                <div className="p-3.5 sm:p-5 text-white flex items-center justify-between shrink-0" style={{ backgroundColor: primaryColor }}>
                     <div>
-                        <h3 className="text-xl font-bold">
+                        <h3 className="text-base sm:text-xl font-black leading-snug">
                             {createdBooking ? "Booking Confirmed 🎉" : `Book Pandit Ji: ${pandit.name}`}
                         </h3>
-                        <p className="text-xs text-orange-100 mt-0.5">
+                        <p className="text-[11px] sm:text-xs text-orange-100 mt-0.5">
                             {pandit.city}, {pandit.state} • {pandit.experienceYears || 5} Yrs Experience
                         </p>
                     </div>
                     <button
                         onClick={onClose}
-                        className="p-2 rounded-full hover:bg-white/20 text-white transition duration-150 cursor-pointer"
+                        className="p-1.5 sm:p-2 rounded-full hover:bg-white/20 text-white transition duration-150 cursor-pointer"
                     >
-                        <FaTimes size={18} />
+                        <FaTimes size={16} />
                     </button>
                 </div>
 
+                <div className="overflow-y-auto p-0 flex-1">
                 {/* SUCCESS VIEW: Rendered when createdBooking is set */}
                 {createdBooking ? (
-                    <div className="p-8 text-center space-y-6">
-                        <div className="w-20 h-20 mx-auto rounded-full bg-green-100 text-green-600 flex items-center justify-center text-4xl shadow-inner border-2 border-green-300 animate-bounce">
+                    <div className="p-5 sm:p-8 text-center space-y-4 sm:space-y-6">
+                        <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto rounded-full bg-green-100 text-green-600 flex items-center justify-center text-3xl sm:text-4xl shadow-inner border-2 border-green-300 animate-bounce">
                             ✓
                         </div>
 
                         <div>
-                            <span className="bg-green-100 text-green-800 text-xs font-black uppercase tracking-wider px-3 py-1 rounded-full border border-green-300">
+                            <span className="bg-green-100 text-green-800 text-[10px] sm:text-xs font-black uppercase tracking-wider px-3 py-1 rounded-full border border-green-300">
                                 Booking Placed Successfully
                             </span>
-                            <h2 className="text-2xl font-black text-gray-900 mt-2">
+                            <h2 className="text-xl sm:text-2xl font-black text-gray-900 mt-2">
                                 Booking #{createdBooking._id?.slice(-6).toUpperCase()}
                             </h2>
                             <p className="text-xs text-gray-500 font-semibold mt-1">
@@ -168,7 +169,7 @@ function BookingModal({ pandit, initialService, onClose }) {
                             </p>
                         </div>
 
-                        <div className="p-4 bg-orange-50/70 rounded-2xl border border-orange-100 text-left space-y-2 text-xs">
+                        <div className="p-3.5 sm:p-4 bg-orange-50/70 rounded-2xl border border-orange-100 text-left space-y-2 text-xs">
                             <div className="flex justify-between font-bold text-gray-800">
                                 <span>Service:</span>
                                 <span>{createdBooking.serviceName}</span>
@@ -193,7 +194,7 @@ function BookingModal({ pandit, initialService, onClose }) {
                                     onClose();
                                     navigate("/my-bookings");
                                 }}
-                                className="py-3 px-4 rounded-xl font-bold text-xs text-white bg-green-600 hover:bg-green-700 shadow-md cursor-pointer"
+                                className="py-2.5 sm:py-3 px-4 rounded-xl font-bold text-xs text-white bg-green-600 hover:bg-green-700 shadow-md cursor-pointer"
                             >
                                 View My Bookings
                             </button>
@@ -202,7 +203,7 @@ function BookingModal({ pandit, initialService, onClose }) {
                                     onClose();
                                     navigate("/my-bookings");
                                 }}
-                                className="py-3 px-4 rounded-xl font-bold text-xs text-gray-700 bg-gray-100 hover:bg-gray-200 cursor-pointer"
+                                className="py-2.5 sm:py-3 px-4 rounded-xl font-bold text-xs text-gray-700 bg-gray-100 hover:bg-gray-200 cursor-pointer"
                             >
                                 Track Status
                             </button>
@@ -212,108 +213,108 @@ function BookingModal({ pandit, initialService, onClose }) {
                     <>
 
                 {/* Booking Mode Selector (Instant vs Scheduled) */}
-                <div className="p-4 bg-orange-50/60 border-b border-gray-200">
-                    <label className="block text-xs font-extrabold uppercase text-gray-500 mb-2">Select Booking Mode</label>
-                    <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 sm:p-4 bg-orange-50/60 border-b border-gray-200">
+                    <label className="block text-[11px] sm:text-xs font-extrabold uppercase text-gray-500 mb-1.5 sm:mb-2">Select Booking Mode</label>
+                    <div className="grid grid-cols-2 gap-2 sm:gap-3">
                         <button
                             type="button"
                             onClick={() => setBookingType('scheduled')}
-                            className={`flex items-center justify-center gap-2 p-3 rounded-xl border text-sm font-bold transition-all cursor-pointer ${
+                            className={`flex items-center justify-center gap-1.5 p-2 sm:p-3 rounded-xl border text-xs sm:text-sm font-bold transition-all cursor-pointer ${
                                 bookingType === 'scheduled'
                                     ? 'bg-white border-orange-500 text-orange-600 shadow-xs ring-2 ring-orange-400/20'
                                     : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-white'
                             }`}
                         >
-                            <FaCalendarAlt size={16} />
-                            <span>Scheduled Booking</span>
+                            <FaCalendarAlt size={14} />
+                            <span className="truncate">Scheduled</span>
                         </button>
 
                         <button
                             type="button"
                             onClick={() => setBookingType('instant')}
-                            className={`flex items-center justify-center gap-2 p-3 rounded-xl border text-sm font-bold transition-all cursor-pointer ${
+                            className={`flex items-center justify-center gap-1.5 p-2 sm:p-3 rounded-xl border text-xs sm:text-sm font-bold transition-all cursor-pointer ${
                                 bookingType === 'instant'
                                     ? 'bg-white border-orange-500 text-orange-600 shadow-xs ring-2 ring-orange-400/20'
                                     : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-white'
                             }`}
                         >
-                            <FaBolt className="text-amber-500" size={16} />
-                            <span>Instant Booking (Now)</span>
+                            <FaBolt className="text-amber-500" size={14} />
+                            <span className="truncate">Instant (Now)</span>
                         </button>
                     </div>
                 </div>
 
                 {/* Booking Form Body */}
-                <form onSubmit={handleCreateBooking} className="p-6 space-y-5">
+                <form onSubmit={handleCreateBooking} className="p-4 sm:p-6 space-y-3.5 sm:space-y-5">
                     {/* User Details */}
                     <div>
-                        <h4 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-1.5">
+                        <h4 className="text-xs sm:text-sm font-bold text-gray-900 mb-2 sm:mb-3 flex items-center gap-1.5">
                             <FaUser className="text-orange-500" /> User Contact & Venue Details
                         </h4>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
                             <div>
-                                <label className="block text-xs font-semibold text-gray-700 mb-1">Your Full Name</label>
+                                <label className="block text-[11px] sm:text-xs font-semibold text-gray-700 mb-1">Your Full Name</label>
                                 <input
                                     type="text"
                                     required
                                     value={userName}
                                     onChange={(e) => setUserName(e.target.value)}
                                     placeholder="Enter your name"
-                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-500"
+                                    className="w-full border border-gray-300 rounded-lg px-2.5 py-2 text-xs sm:text-sm focus:outline-none focus:border-orange-500"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-xs font-semibold text-gray-700 mb-1">Mobile Number</label>
+                                <label className="block text-[11px] sm:text-xs font-semibold text-gray-700 mb-1">Mobile Number</label>
                                 <input
                                     type="tel"
                                     required
                                     value={userMobile}
                                     onChange={(e) => setUserMobile(e.target.value)}
                                     placeholder="10-digit mobile number"
-                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-500"
+                                    className="w-full border border-gray-300 rounded-lg px-2.5 py-2 text-xs sm:text-sm focus:outline-none focus:border-orange-500"
                                 />
                             </div>
                         </div>
 
-                        <div className="mt-3">
-                            <label className="block text-xs font-semibold text-gray-700 mb-1">Pooja Venue Address</label>
+                        <div className="mt-2.5">
+                            <label className="block text-[11px] sm:text-xs font-semibold text-gray-700 mb-1">Pooja Venue Address</label>
                             <input
                                 type="text"
                                 required
                                 value={address}
                                 onChange={(e) => setAddress(e.target.value)}
                                 placeholder="House no, Street, Colony, City"
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-500"
+                                className="w-full border border-gray-300 rounded-lg px-2.5 py-2 text-xs sm:text-sm focus:outline-none focus:border-orange-500"
                             />
                         </div>
                     </div>
 
                     {/* Date and Time (Active for Scheduled) */}
                     {bookingType === 'scheduled' && (
-                        <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
-                            <h4 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-1.5">
+                        <div className="p-3 sm:p-4 bg-gray-50 rounded-xl border border-gray-200">
+                            <h4 className="text-xs sm:text-sm font-bold text-gray-900 mb-2 sm:mb-3 flex items-center gap-1.5">
                                 <FaCalendarAlt className="text-orange-500" /> Select Date & Time
                             </h4>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
                                 <div>
-                                    <label className="block text-xs font-semibold text-gray-700 mb-1">Date</label>
+                                    <label className="block text-[11px] sm:text-xs font-semibold text-gray-700 mb-1">Date</label>
                                     <input
                                         type="date"
                                         required
                                         min={new Date().toISOString().split("T")[0]}
                                         value={date}
                                         onChange={(e) => setDate(e.target.value)}
-                                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:border-orange-500"
+                                        className="w-full border border-gray-300 rounded-lg px-2.5 py-2 text-xs sm:text-sm bg-white focus:outline-none focus:border-orange-500"
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-semibold text-gray-700 mb-1">Preferred Time</label>
+                                    <label className="block text-[11px] sm:text-xs font-semibold text-gray-700 mb-1">Preferred Time</label>
                                     <select
                                         value={time}
                                         onChange={(e) => setTime(e.target.value)}
-                                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:border-orange-500"
+                                        className="w-full border border-gray-300 rounded-lg px-2.5 py-2 text-xs sm:text-sm bg-white focus:outline-none focus:border-orange-500"
                                     >
                                         <option value="06:00 AM">06:00 AM (Brahma Muhurat)</option>
                                         <option value="08:00 AM">08:00 AM (Morning)</option>
@@ -329,16 +330,16 @@ function BookingModal({ pandit, initialService, onClose }) {
 
                     {/* Service Selection / Custom Requirement */}
                     <div>
-                        <div className="flex items-center justify-between mb-2">
-                            <label className="block text-sm font-bold text-gray-900">What do you want Pandit Ji for?</label>
-                            <label className="text-xs font-semibold text-orange-600 flex items-center gap-1 cursor-pointer">
+                        <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+                            <label className="block text-xs sm:text-sm font-bold text-gray-900">What do you want Pandit Ji for?</label>
+                            <label className="text-[11px] sm:text-xs font-semibold text-orange-600 flex items-center gap-1 cursor-pointer">
                                 <input
                                     type="checkbox"
                                     checked={isCustomPooja}
                                     onChange={(e) => setIsCustomPooja(e.target.checked)}
                                     className="accent-orange-500"
                                 />
-                                <span>Custom / Other Requirement</span>
+                                <span>Custom Requirement</span>
                             </label>
                         </div>
 
@@ -346,7 +347,7 @@ function BookingModal({ pandit, initialService, onClose }) {
                             <select
                                 value={selectedService}
                                 onChange={(e) => setSelectedService(e.target.value)}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm bg-white font-medium focus:outline-none focus:border-orange-500"
+                                className="w-full border border-gray-300 rounded-lg px-2.5 py-2 text-xs sm:text-sm bg-white font-medium focus:outline-none focus:border-orange-500"
                             >
                                 {(pandit?.services || []).map((s, index) => (
                                     <option key={index} value={s.name}>
@@ -365,66 +366,64 @@ function BookingModal({ pandit, initialService, onClose }) {
                         ) : (
                             <div>
                                 <textarea
-                                    rows="3"
+                                    rows="2"
                                     value={customRequirement}
                                     onChange={(e) => setCustomRequirement(e.target.value)}
                                     placeholder="e.g. I want Pandit Ji for a Griha Pravesh Puja & Hawan for approximately 20 people..."
-                                    className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:border-orange-500"
+                                    className="w-full border border-gray-300 rounded-lg p-2.5 text-xs sm:text-sm focus:outline-none focus:border-orange-500"
                                 ></textarea>
                             </div>
                         )}
                     </div>
 
                     {/* Bhojan Seva Food Checkbox */}
-                    <div className="p-4 bg-orange-50/50 rounded-xl border border-orange-100">
+                    <div className="p-3 sm:p-4 bg-orange-50/50 rounded-xl border border-orange-100">
                         <label className="flex items-center justify-between cursor-pointer">
-                            <span className="flex items-center gap-2 text-xs font-bold text-gray-800">
+                            <span className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
                                 <FaUtensils className="text-orange-500" /> Will you arrange food for Pandit Ji?
                             </span>
                             <input
                                 type="checkbox"
                                 checked={bhojanSeva}
                                 onChange={(e) => setBhojanSeva(e.target.checked)}
-                                className="w-4 h-4 accent-orange-500 cursor-pointer"
+                                className="w-4 h-4 accent-orange-500 cursor-pointer shrink-0"
                             />
                         </label>
-                        <p className="text-[11px] text-gray-500 mt-1">
+                        <p className="text-[10px] sm:text-[11px] text-gray-500 mt-1">
                             Tick this box if you plan to provide food/bhojan to Pandit Ji at your venue.
                         </p>
                     </div>
 
                     {/* Price Summary & Submit */}
-                    <div className="pt-3 border-t border-gray-200 flex items-center justify-between gap-4">
+                    <div className="pt-3 border-t border-gray-200 flex items-center justify-between gap-2 sm:gap-4">
                         <div>
-                            <span className="text-xs text-gray-500 block">Total Service Charge</span>
-                            <span className="text-2xl font-extrabold text-gray-900">₹{totalAmount}</span>
-                            <span className="text-[11px] font-semibold text-orange-600 block mt-0.5">
-                                * Dakshina: Optional / As mutually decided
-                            </span>
+                            <span className="text-[10px] sm:text-xs text-gray-500 block">Total Service Charge</span>
+                            <span className="text-xl sm:text-2xl font-extrabold text-gray-900">₹{totalAmount}</span>
                         </div>
 
                         <button
                             type="submit"
                             disabled={loading}
-                            className="px-6 py-3 rounded-xl font-bold text-white shadow-md hover:opacity-90 transition duration-200 cursor-pointer flex items-center gap-2"
+                            className="px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl font-bold text-xs sm:text-sm text-white shadow-md hover:opacity-90 transition duration-200 cursor-pointer flex items-center gap-1.5 shrink-0"
                             style={{ backgroundColor: primaryColor }}
                         >
                             {loading ? (
-                                <ClipLoader size={20} color="#fff" />
+                                <ClipLoader size={18} color="#fff" />
                             ) : (
-                                <span>Submit Booking Request</span>
+                                <span>Submit Request</span>
                             )}
                         </button>
                     </div>
 
                     {error && (
-                        <p className="bg-red-50 text-red-600 p-3 rounded-lg text-xs font-semibold text-center border border-red-200">
+                        <p className="bg-red-50 text-red-600 p-2.5 rounded-lg text-xs font-semibold text-center border border-red-200">
                             ⚠️ {error}
                         </p>
                     )}
                 </form>
                 </>
                 )}
+                </div>
             </div>
         </div>
     );
