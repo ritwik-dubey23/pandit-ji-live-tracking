@@ -10,6 +10,8 @@ import useCurrentLocation from '../hooks/useCurrentLocation';
 
 const serverUrl = import.meta.env.VITE_SERVER_URL || "http://localhost:8000";
 
+import { playNotificationSound } from '../utils/audio';
+
 function BookingModal({ pandit, initialService, onClose }) {
     const primaryColor = "#ff4d2d";
     const dispatch = useDispatch();
@@ -31,7 +33,7 @@ function BookingModal({ pandit, initialService, onClose }) {
     const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
     const [time, setTime] = useState("10:00 AM");
 
-    // Additional options
+    // Food arrangement checkbox option: "Will you arrange food for Pandit Ji?"
     const [bhojanSeva, setBhojanSeva] = useState(false);
     const [numberOfPeople, setNumberOfPeople] = useState(10);
 
@@ -39,6 +41,9 @@ function BookingModal({ pandit, initialService, onClose }) {
     const [userName, setUserName] = useState(userData?.fullName || '');
     const [userMobile, setUserMobile] = useState(userData?.mobile || '');
     const [address, setAddress] = useState(userData?.address || location.formattedAddress);
+
+    // Created Booking Success State
+    const [createdBooking, setCreatedBooking] = useState(null);
 
     // Auto-update address state when current location is detected
     React.useEffect(() => {
@@ -114,9 +119,9 @@ function BookingModal({ pandit, initialService, onClose }) {
 
             const res = await axios.post(`${serverUrl}/api/booking/create`, payload, { withCredentials: true });
             dispatch(addBooking(res.data.booking));
+            playNotificationSound(res.data.booking._id);
             setLoading(false);
-            onClose();
-            navigate("/my-bookings");
+            setCreatedBooking(res.data.booking);
         } catch (err) {
             setLoading(false);
             setError(err?.response?.data?.message || "Failed to submit booking request. Please try again.");
@@ -124,13 +129,17 @@ function BookingModal({ pandit, initialService, onClose }) {
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs overflow-y-auto">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden border border-gray-100 my-8">
+        <div className="fixed inset-0 z-[99999] flex items-start justify-center p-4 pt-16 md:pt-20 bg-black/70 backdrop-blur-xs overflow-y-auto">
+            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden border border-gray-100 my-4 sm:my-6 transition-all duration-300">
                 {/* Modal Header */}
                 <div className="p-5 text-white flex items-center justify-between" style={{ backgroundColor: primaryColor }}>
                     <div>
-                        <h3 className="text-xl font-bold">Book Pandit Ji: {pandit.name}</h3>
-                        <p className="text-xs text-orange-100 mt-0.5">{pandit.city}, {pandit.state} • {pandit.experienceYears || 5} Yrs Experience</p>
+                        <h3 className="text-xl font-bold">
+                            {createdBooking ? "Booking Confirmed 🎉" : `Book Pandit Ji: ${pandit.name}`}
+                        </h3>
+                        <p className="text-xs text-orange-100 mt-0.5">
+                            {pandit.city}, {pandit.state} • {pandit.experienceYears || 5} Yrs Experience
+                        </p>
                     </div>
                     <button
                         onClick={onClose}
@@ -139,6 +148,68 @@ function BookingModal({ pandit, initialService, onClose }) {
                         <FaTimes size={18} />
                     </button>
                 </div>
+
+                {/* SUCCESS VIEW: Rendered when createdBooking is set */}
+                {createdBooking ? (
+                    <div className="p-8 text-center space-y-6">
+                        <div className="w-20 h-20 mx-auto rounded-full bg-green-100 text-green-600 flex items-center justify-center text-4xl shadow-inner border-2 border-green-300 animate-bounce">
+                            ✓
+                        </div>
+
+                        <div>
+                            <span className="bg-green-100 text-green-800 text-xs font-black uppercase tracking-wider px-3 py-1 rounded-full border border-green-300">
+                                Booking Placed Successfully
+                            </span>
+                            <h2 className="text-2xl font-black text-gray-900 mt-2">
+                                Booking #{createdBooking._id?.slice(-6).toUpperCase()}
+                            </h2>
+                            <p className="text-xs text-gray-500 font-semibold mt-1">
+                                Pandit Ji has been notified of your request!
+                            </p>
+                        </div>
+
+                        <div className="p-4 bg-orange-50/70 rounded-2xl border border-orange-100 text-left space-y-2 text-xs">
+                            <div className="flex justify-between font-bold text-gray-800">
+                                <span>Service:</span>
+                                <span>{createdBooking.serviceName}</span>
+                            </div>
+                            <div className="flex justify-between font-semibold text-gray-700">
+                                <span>Date & Time:</span>
+                                <span>{createdBooking.date} ({createdBooking.time})</span>
+                            </div>
+                            <div className="flex justify-between font-semibold text-gray-700">
+                                <span>Total Amount:</span>
+                                <span className="font-extrabold text-gray-900">₹{createdBooking.totalAmount}</span>
+                            </div>
+                            <div className="flex justify-between font-semibold text-gray-700 pt-1 border-t border-orange-200">
+                                <span>Food Arranged by Customer:</span>
+                                <span className="font-bold text-orange-700">{createdBooking.bhojanSeva ? "Yes" : "No"}</span>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                            <button
+                                onClick={() => {
+                                    onClose();
+                                    navigate("/my-bookings");
+                                }}
+                                className="py-3 px-4 rounded-xl font-bold text-xs text-white bg-green-600 hover:bg-green-700 shadow-md cursor-pointer"
+                            >
+                                View My Bookings
+                            </button>
+                            <button
+                                onClick={() => {
+                                    onClose();
+                                    navigate("/my-bookings");
+                                }}
+                                className="py-3 px-4 rounded-xl font-bold text-xs text-gray-700 bg-gray-100 hover:bg-gray-200 cursor-pointer"
+                            >
+                                Track Status
+                            </button>
+                        </div>
+                    </div>
+                ) : (
+                    <>
 
                 {/* Booking Mode Selector (Instant vs Scheduled) */}
                 <div className="p-4 bg-orange-50/60 border-b border-gray-200">
@@ -304,36 +375,22 @@ function BookingModal({ pandit, initialService, onClose }) {
                         )}
                     </div>
 
-                    {/* Bhojan Seva Add-on */}
-                    <div className="p-4 bg-orange-50/40 rounded-xl border border-orange-100">
+                    {/* Bhojan Seva Food Checkbox */}
+                    <div className="p-4 bg-orange-50/50 rounded-xl border border-orange-100">
                         <label className="flex items-center justify-between cursor-pointer">
-                            <span className="flex items-center gap-2 text-sm font-bold text-gray-800">
-                                <FaUtensils className="text-orange-500" /> Include Bhojan Seva Arrangement?
+                            <span className="flex items-center gap-2 text-xs font-bold text-gray-800">
+                                <FaUtensils className="text-orange-500" /> Will you arrange food for Pandit Ji?
                             </span>
                             <input
                                 type="checkbox"
                                 checked={bhojanSeva}
                                 onChange={(e) => setBhojanSeva(e.target.checked)}
-                                className="w-4 h-4 accent-orange-500"
+                                className="w-4 h-4 accent-orange-500 cursor-pointer"
                             />
                         </label>
-
-                        {bhojanSeva && (
-                            <div className="mt-3 flex items-center gap-3">
-                                <label className="text-xs font-semibold text-gray-600 flex items-center gap-1">
-                                    <FaUsers /> Number of Guests:
-                                </label>
-                                <input
-                                    type="number"
-                                    min="5"
-                                    max="500"
-                                    value={numberOfPeople}
-                                    onChange={(e) => setNumberOfPeople(Number(e.target.value))}
-                                    className="w-24 border border-gray-300 rounded-md px-2 py-1 text-sm bg-white"
-                                />
-                                <span className="text-xs font-bold text-orange-600">+₹{bhojanAddon}</span>
-                            </div>
-                        )}
+                        <p className="text-[11px] text-gray-500 mt-1">
+                            Tick this box if you plan to provide food/bhojan to Pandit Ji at your venue.
+                        </p>
                     </div>
 
                     {/* Price Summary & Submit */}
@@ -366,6 +423,8 @@ function BookingModal({ pandit, initialService, onClose }) {
                         </p>
                     )}
                 </form>
+                </>
+                )}
             </div>
         </div>
     );

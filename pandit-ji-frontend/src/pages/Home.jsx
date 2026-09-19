@@ -38,7 +38,7 @@ function Home() {
                 <Navbar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
 
                 {/* HERO BANNER SECTION WITH LOCATION SEARCH BAR */}
-                <div className="w-full pt-[70px] md:pt-[80px]">
+                <div className="w-full pt-[80px] md:pt-[95px]">
                     <div className="relative w-full min-h-[360px] sm:min-h-[420px] md:min-h-[460px] overflow-hidden flex items-center justify-center text-center">
                         <img
                             src="/hero.jpg"

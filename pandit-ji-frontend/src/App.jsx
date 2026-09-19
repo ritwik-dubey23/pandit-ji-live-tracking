@@ -12,6 +12,8 @@ import MyBookings from './pages/MyBookings';
 import PanditDashboard from './components/PanditDashboard';
 import { AboutPage, TermsPage, PrivacyPage, ContactPage } from './pages/StaticPages';
 
+import ServiceDetails from './pages/ServiceDetails';
+
 function App() {
     useGetCurrUser();
     const { userData } = useSelector(state => state.user);
@@ -26,6 +28,7 @@ function App() {
             <Route path='/forgot-password' element={!userData ? <ForgotPassword /> : <Navigate to="/" />} />
 
             <Route path='/pandit/:id' element={isPandit ? <Navigate to="/pandit-dashboard" /> : <PanditDetails />} />
+            <Route path='/service/:serviceId' element={<ServiceDetails />} />
             <Route path='/my-bookings' element={isPandit ? <Navigate to="/pandit-dashboard" /> : (userData ? <MyBookings /> : <Navigate to="/signin" />)} />
 
             {/* Static Policy Pages */}

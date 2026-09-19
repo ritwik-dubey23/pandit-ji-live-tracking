@@ -124,12 +124,24 @@ function PanditActiveBookingCard({ booking, onViewMap }) {
                 </div>
             </div>
 
-            {/* Customer Address */}
-            <div className="p-4 bg-orange-50/50 rounded-2xl border border-orange-100 flex items-start gap-3">
-                <FaMapMarkerAlt className="text-[#ff4d2d] mt-1 shrink-0" size={18} />
-                <div>
-                    <span className="text-xs font-extrabold text-gray-900 block">Customer Destination Address:</span>
-                    <span className="text-xs text-gray-700 font-semibold">{booking.address}</span>
+            {/* Customer Address & Food Status */}
+            <div className="p-4 bg-orange-50/50 rounded-2xl border border-orange-100 space-y-2">
+                <div className="flex items-start gap-3">
+                    <FaMapMarkerAlt className="text-[#ff4d2d] mt-1 shrink-0" size={18} />
+                    <div>
+                        <span className="text-xs font-extrabold text-gray-900 block">Customer Destination Address:</span>
+                        <span className="text-xs text-gray-700 font-semibold">{booking.address}</span>
+                    </div>
+                </div>
+                <div className="pt-2 border-t border-orange-200/50 flex items-center justify-between">
+                    <span className="text-xs font-extrabold text-gray-700">Food Provided by Devotee:</span>
+                    <span className={`text-[11px] font-black px-2.5 py-1 rounded-full border ${
+                        booking.bhojanSeva
+                            ? "bg-green-100 text-green-800 border-green-300"
+                            : "bg-gray-100 text-gray-700 border-gray-300"
+                    }`}>
+                        {booking.bhojanSeva ? "Yes 🍲" : "No ❌"}
+                    </span>
                 </div>
             </div>
 

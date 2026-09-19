@@ -62,6 +62,10 @@ const panditSchema = new mongoose.Schema({
         type: String,
         default: ""
     },
+    backgroundImage: {
+        type: String,
+        default: ""
+    },
     photos: [{
         type: String
     }],

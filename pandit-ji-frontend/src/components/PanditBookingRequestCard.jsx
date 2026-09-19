@@ -94,6 +94,18 @@ function PanditBookingRequestCard({ booking, onAcceptSuccess }) {
                                 <span className="text-gray-900">~{booking.etaMinutes || 8} mins</span>
                             </div>
                         </div>
+
+                        {/* Food Provided by Devotee Status Badge */}
+                        <div className="pt-2 border-t border-orange-200/50 flex items-center justify-between">
+                            <span className="text-xs font-extrabold text-gray-700">Food Provided by Devotee:</span>
+                            <span className={`text-[11px] font-black px-2.5 py-1 rounded-full border ${
+                                booking.bhojanSeva
+                                    ? "bg-green-100 text-green-800 border-green-300"
+                                    : "bg-gray-100 text-gray-700 border-gray-300"
+                            }`}>
+                                {booking.bhojanSeva ? "Yes 🍲" : "No ❌"}
+                            </span>
+                        </div>
                     </div>
                 </div>
 

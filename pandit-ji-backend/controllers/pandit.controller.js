@@ -456,3 +456,45 @@ export const deleteServicePhoto = async (req, res) => {
     }
 };
 
+export const updateBackgroundPhoto = async (req, res) => {
+    try {
+        const pandit = await Pandit.findOne({ user: req.userId });
+        if (!pandit) {
+            return res.status(404).json({ message: "Pandit Ji profile not found" });
+        }
+
+        let bgUrl = "";
+        if (req.file) {
+            const result = await cloudinary.uploader.upload(req.file.path, {
+                folder: "pandit_ji_backgrounds"
+            });
+            if (result && result.secure_url) {
+                bgUrl = result.secure_url;
+            }
+        } else if (req.body.backgroundImage) {
+            bgUrl = req.body.backgroundImage;
+        }
+
+        if (!bgUrl) {
+            return res.status(400).json({ message: "No background image provided." });
+        }
+
+        // Clean up old background if hosted on Cloudinary
+        if (pandit.backgroundImage && pandit.backgroundImage.includes("cloudinary.com")) {
+            await deleteCloudinaryImage(pandit.backgroundImage);
+        }
+
+        pandit.backgroundImage = bgUrl;
+        await pandit.save();
+
+        return res.status(200).json({
+            message: "Profile background image updated successfully!",
+            pandit,
+            backgroundImage: bgUrl
+        });
+    } catch (error) {
+        console.error("updateBackgroundPhoto error:", error);
+        return res.status(500).json({ message: `Background photo update error: ${error.message}` });
+    }
+};
+

@@ -8,6 +8,7 @@ import {
     deleteService,
     toggleOnline,
     updateProfilePhoto,
+    updateBackgroundPhoto,
     addServicePhotos,
     deleteServicePhoto
 } from "../controllers/pandit.controller.js";
@@ -22,6 +23,7 @@ panditRouter.put("/toggle-online", isAuth, toggleOnline);
 panditRouter.get("/:id", getPanditById);
 panditRouter.post("/profile", isAuth, upload.single("profileImage"), createOrUpdateProfile);
 panditRouter.post("/profile-photo", isAuth, upload.single("profileImage"), updateProfilePhoto);
+panditRouter.post("/background-photo", isAuth, upload.single("backgroundImage"), updateBackgroundPhoto);
 panditRouter.post("/service", isAuth, upload.fields([{ name: 'image', maxCount: 1 }, { name: 'photos', maxCount: 10 }]), addOrUpdateService);
 panditRouter.post("/service/:serviceId/photos", isAuth, upload.array("photos", 10), addServicePhotos);
 panditRouter.post("/service/:serviceId/delete-photo", isAuth, deleteServicePhoto);

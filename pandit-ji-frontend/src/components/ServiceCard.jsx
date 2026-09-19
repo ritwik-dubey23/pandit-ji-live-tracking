@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { FaClock, FaTag, FaPrayingHands, FaImages, FaExpand } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
+import { FaClock, FaTag, FaPrayingHands, FaImages, FaExpand, FaChevronRight } from 'react-icons/fa';
 
 function ServiceCard({ service, onBookService }) {
     const primaryColor = "#ff4d2d";
+    const navigate = useNavigate();
     const [selectedPhoto, setSelectedPhoto] = useState(null);
 
     const photosList = [
@@ -13,16 +15,22 @@ function ServiceCard({ service, onBookService }) {
     // Deduplicate photo URLs
     const uniquePhotos = Array.from(new Set(photosList));
 
+    const handleOpenDetails = () => {
+        if (service._id) {
+            navigate(`/service/${service._id}`);
+        }
+    };
+
     return (
-        <div className="bg-white rounded-2xl border border-orange-100 p-5 shadow-sm hover:border-orange-300 hover:shadow-xl transition-all duration-200 flex flex-col justify-between">
+        <div className="bg-white rounded-2xl border border-orange-100 p-5 shadow-sm hover:border-orange-300 hover:shadow-xl transition-all duration-200 flex flex-col justify-between group">
             <div>
                 {/* Header & Pricing */}
-                <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start justify-between gap-3 cursor-pointer" onClick={handleOpenDetails}>
                     <div className="flex items-center gap-2.5">
                         <div className="w-9 h-9 rounded-xl bg-orange-100 text-[#ff4d2d] flex items-center justify-center font-bold shrink-0">
                             <FaPrayingHands size={18} />
                         </div>
-                        <h4 className="text-lg font-extrabold text-gray-900 leading-snug">{service.name}</h4>
+                        <h4 className="text-lg font-extrabold text-gray-900 leading-snug group-hover:text-[#ff4d2d] transition-colors">{service.name}</h4>
                     </div>
                     <span className="text-xl font-black text-[#ff4d2d] shrink-0">₹{service.price}</span>
                 </div>

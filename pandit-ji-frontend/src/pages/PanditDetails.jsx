@@ -75,7 +75,7 @@ function PanditDetails() {
         <div className="min-h-screen bg-[#fff9f9]">
             <Navbar />
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-[90px] md:pt-[105px] pb-8">
                 {/* Back Button */}
                 <button
                     onClick={() => navigate(-1)}
@@ -84,100 +84,105 @@ function PanditDetails() {
                     <FaChevronLeft /> Back to Pandit Ji List
                 </button>
 
-                {/* Profile Header Card */}
-                <div className="bg-white rounded-3xl border border-gray-200 p-6 sm:p-8 shadow-md grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Photos Gallery */}
-                    <div className="lg:col-span-1">
-                        <div
-                            onClick={() => setLightboxPhoto(allPhotos[activePhotoIndex] || pandit.profileImage)}
-                            className="relative h-72 w-full rounded-2xl overflow-hidden bg-orange-50 border border-gray-200 shadow-xs cursor-pointer group"
-                        >
-                            <img
-                                src={allPhotos[activePhotoIndex] || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400"}
-                                alt={pandit.name}
-                                className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
-                            />
-                            <div className="absolute bottom-3 right-3 bg-black/60 text-white text-xs px-2.5 py-1 rounded-full flex items-center gap-1 opacity-80 group-hover:opacity-100 transition">
-                                <FaExpand size={12} /> Click to expand
-                            </div>
+                {/* Modern Hero Profile Header Card */}
+                <div className="bg-white rounded-3xl border border-orange-100 overflow-hidden shadow-xl">
+                    {/* Top Hero Banner Background */}
+                    <div
+                        className="relative text-white p-6 sm:p-8 bg-cover bg-center overflow-hidden"
+                        style={{
+                            backgroundImage: pandit.backgroundImage
+                                ? `linear-gradient(to right, rgba(28,25,23,0.9), rgba(67,20,7,0.85), rgba(28,25,23,0.9)), url(${pandit.backgroundImage})`
+                                : "linear-gradient(to right, #1c1917, #431407, #1c1917)"
+                        }}
+                    >
+                        <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
+                            <span className="text-9xl font-black">🕉️</span>
                         </div>
 
-                        {allPhotos.length > 1 && (
-                            <div className="flex items-center gap-2 mt-3 overflow-x-auto pb-1">
+                        <div className="relative z-10 flex flex-col md:flex-row items-center md:items-start gap-6">
+                            {/* Main Circular Profile Photo */}
+                            <div className="relative shrink-0">
+                                <div
+                                    onClick={() => setLightboxPhoto(allPhotos[activePhotoIndex] || pandit.profileImage)}
+                                    className="w-32 h-32 sm:w-36 sm:h-36 rounded-full overflow-hidden border-4 border-amber-400 shadow-2xl cursor-pointer group bg-stone-800"
+                                >
+                                    <img
+                                        src={allPhotos[activePhotoIndex] || pandit.profileImage || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400"}
+                                        alt={pandit.name}
+                                        className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                                    />
+                                    <div className="absolute inset-0 bg-black/30 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition">
+                                        <FaExpand size={18} />
+                                    </div>
+                                </div>
+                                <span className="absolute bottom-1 right-1 bg-green-500 w-5 h-5 rounded-full border-2 border-stone-900" title="Online & Available"></span>
+                            </div>
+
+                            {/* Hero Text Details */}
+                            <div className="flex-1 text-center md:text-left space-y-3">
+                                <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
+                                    <span className="bg-amber-400/20 text-amber-300 text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider border border-amber-400/40 backdrop-blur-xs">
+                                        ✓ Verified Acharya
+                                    </span>
+                                    <span className="bg-white/10 text-stone-200 text-xs font-bold px-3 py-1 rounded-full backdrop-blur-xs flex items-center gap-1">
+                                        <FaBriefcase className="text-amber-400" /> {pandit.experienceYears || 5}+ Yrs Experience
+                                    </span>
+                                </div>
+
+                                <h1 className="text-3xl sm:text-4xl font-black text-white">{pandit.name}</h1>
+
+                                <p className="text-xs sm:text-sm text-stone-300 font-medium max-w-2xl leading-relaxed">
+                                    {pandit.description || "Experienced Gurukul Pandit Ji offering authentic Vedic rituals, Havan, Griha Pravesh, Marriage ceremonies, and customized Poojas with complete Samagri guidance."}
+                                </p>
+
+                                <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 pt-1 text-xs text-stone-300 font-semibold">
+                                    <span className="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-xl border border-white/10">
+                                        <FaMapMarkerAlt className="text-amber-400" />
+                                        {pandit.city}, {pandit.state} ({pandit.address})
+                                    </span>
+
+                                    <div className="flex items-center gap-1.5 bg-amber-400/20 px-3 py-1.5 rounded-xl border border-amber-400/40 text-amber-300 font-bold">
+                                        <FaStar className="text-amber-400" />
+                                        <span>{pandit.rating?.average || 4.9}</span>
+                                        <span className="text-[10px] text-stone-300 font-medium">({pandit.rating?.count || 15} Devotee Reviews)</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Lower Gallery & Action CTA Strip */}
+                    <div className="p-6 bg-orange-50/50 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-orange-100">
+                        {/* Photos Gallery Thumbnails */}
+                        {allPhotos.length > 0 ? (
+                            <div className="flex items-center gap-2 overflow-x-auto max-w-full pb-1">
+                                <span className="text-xs font-extrabold text-gray-500 uppercase tracking-wider shrink-0 mr-1 flex items-center gap-1">
+                                    <FaImages className="text-orange-500" /> Gallery ({allPhotos.length}):
+                                </span>
                                 {allPhotos.map((pUrl, idx) => (
                                     <button
                                         key={idx}
                                         onClick={() => setActivePhotoIndex(idx)}
-                                        className={`w-14 h-14 rounded-xl overflow-hidden border-2 cursor-pointer shrink-0 transition ${
-                                            activePhotoIndex === idx ? "border-orange-500 ring-2 ring-orange-300/30" : "border-gray-200 opacity-70 hover:opacity-100"
+                                        className={`w-12 h-12 rounded-xl overflow-hidden border-2 cursor-pointer shrink-0 transition ${
+                                            activePhotoIndex === idx ? "border-[#ff4d2d] ring-2 ring-orange-400/50" : "border-gray-200 opacity-70 hover:opacity-100"
                                         }`}
                                     >
-                                        <img src={pUrl} alt="gallery" className="w-full h-full object-cover" />
+                                        <img src={pUrl} alt="gallery thumbnail" className="w-full h-full object-cover" />
                                     </button>
                                 ))}
                             </div>
-                        )}
-                    </div>
+                        ) : <div></div>}
 
-                    {/* Bio & Details */}
-                    <div className="lg:col-span-2 flex flex-col justify-between">
-                        <div>
-                            <div className="flex items-start justify-between gap-4">
-                                <div>
-                                    <span className="bg-orange-100 text-orange-700 text-xs font-extrabold px-3 py-1 rounded-full uppercase tracking-wider border border-orange-200">
-                                        Verified Acharya
-                                    </span>
-                                    <h1 className="text-3xl font-extrabold text-gray-900 mt-2">{pandit.name}</h1>
-                                </div>
-
-                                <div className="bg-orange-50 border border-orange-200 px-3 py-1.5 rounded-xl text-center">
-                                    <div className="flex items-center justify-center gap-1 text-sm font-bold text-gray-900">
-                                        <FaStar className="text-yellow-500" />
-                                        <span>{pandit.rating?.average || 4.9}</span>
-                                    </div>
-                                    <span className="text-[10px] font-semibold text-gray-500 block">({pandit.rating?.count || 15} Reviews)</span>
-                                </div>
-                            </div>
-
-                            <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-gray-600 mt-4">
-                                <span className="flex items-center gap-1.5 bg-gray-50 px-3 py-1.5 rounded-lg">
-                                    <FaMapMarkerAlt className="text-orange-500" />
-                                    {pandit.city}, {pandit.state} ({pandit.address})
-                                </span>
-                                <span className="flex items-center gap-1.5 bg-gray-50 px-3 py-1.5 rounded-lg">
-                                    <FaBriefcase className="text-orange-500" />
-                                    {pandit.experienceYears || 5}+ Years Vedic Experience
-                                </span>
-                            </div>
-
-                            <div className="mt-5">
-                                <h4 className="text-xs font-extrabold text-gray-400 uppercase tracking-wider">About Pandit Ji</h4>
-                                <p className="text-sm text-gray-700 mt-1 leading-relaxed">
-                                    {pandit.description || "Experienced Pandit Ji offering authentic Vedic rituals, Griha Pravesh, Hawan, Marriage ceremonies, and customized Poojas with complete Samagri guidance."}
-                                </p>
-                            </div>
-                        </div>
-
-                        {/* Action CTA */}
-                        <div className="mt-8 pt-4 border-t border-gray-100 flex items-center justify-between gap-4">
-                            <div>
-                                <span className="text-xs text-gray-400 block font-medium">Availability</span>
-                                <span className="text-sm font-bold text-green-600 flex items-center gap-1">
-                                    <FaCheckCircle /> Ready for Bookings
-                                </span>
-                            </div>
-
-                            <button
-                                onClick={() => {
-                                    setSelectedServiceForBooking(null);
-                                    setShowBookingModal(true);
-                                }}
-                                className="px-6 py-3 text-sm font-bold text-white rounded-xl shadow-md hover:opacity-90 transition duration-200 cursor-pointer"
-                                style={{ backgroundColor: primaryColor }}
-                            >
-                                Book Pandit Ji Now
-                            </button>
-                        </div>
+                        <button
+                            onClick={() => {
+                                setSelectedServiceForBooking(null);
+                                setShowBookingModal(true);
+                            }}
+                            className="px-8 py-3.5 text-sm font-black text-white rounded-2xl shadow-lg hover:shadow-xl hover:scale-105 transition duration-200 cursor-pointer shrink-0 min-h-[44px] flex items-center gap-2"
+                            style={{ backgroundColor: primaryColor }}
+                        >
+                            Book Pandit Ji Now ➔
+                        </button>
                     </div>
                 </div>
 

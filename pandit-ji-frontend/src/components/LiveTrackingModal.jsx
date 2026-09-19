@@ -181,15 +181,33 @@ function LiveTrackingModal({ booking, currentUserRole, onClose, onStatusUpdated 
             }
         };
 
+        const handleReceiveChatMessage = (data) => {
+            if (data.bookingId === booking._id) {
+                setChatMessages(prev => {
+                    if (prev.some(m => m.id === data.id || (m.text === data.text && m.sender === data.senderRole))) return prev;
+                    return [...prev, { id: data.id, sender: data.senderRole, text: data.text, createdAt: data.createdAt }];
+                });
+            }
+        };
+
+        const handleConnect = () => {
+            console.log("[SOCKET RECONNECTED] Rejoining booking room:", booking._id);
+            socket.emit("join_booking_room", booking._id);
+        };
+
+        socket.on("connect", handleConnect);
         socket.on("pandit_location_updated", handleLocationUpdate);
         socket.on("booking_location_updated", handleLocationUpdate);
         socket.on("booking_status_updated", handleStatusUpdate);
+        socket.on("receive_chat_message", handleReceiveChatMessage);
 
         return () => {
             if (watchIdRef.current) navigator.geolocation.clearWatch(watchIdRef.current);
+            socket.off("connect", handleConnect);
             socket.off("pandit_location_updated", handleLocationUpdate);
             socket.off("booking_location_updated", handleLocationUpdate);
             socket.off("booking_status_updated", handleStatusUpdate);
+            socket.off("receive_chat_message", handleReceiveChatMessage);
         };
     }, [booking._id, currentUserRole]);
 
@@ -208,8 +226,28 @@ function LiveTrackingModal({ booking, currentUserRole, onClose, onStatusUpdated 
     const handleSendMessage = (e) => {
         e.preventDefault();
         if (!newMessage.trim()) return;
-        setChatMessages(prev => [...prev, { sender: currentUserRole, text: newMessage.trim() }]);
+        const msgText = newMessage.trim();
+
+        const newMsg = {
+            id: Date.now().toString() + Math.random().toString(36).substring(2, 5),
+            sender: currentUserRole,
+            text: msgText,
+            createdAt: new Date().toISOString()
+        };
+
+        setChatMessages(prev => [...prev, newMsg]);
         setNewMessage("");
+
+        const recipientId = currentUserRole === "pandit"
+            ? (booking.user?._id || booking.user)
+            : (booking.pandit?.user?._id || booking.pandit?.user);
+
+        socket.emit("send_chat_message", {
+            bookingId: booking._id,
+            text: msgText,
+            senderRole: currentUserRole,
+            recipientId
+        });
     };
 
     const panditName = booking.pandit?.name || "Pandit Rajesh Shastri";

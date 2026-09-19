@@ -20,7 +20,7 @@ function MyBookings() {
         <div className="min-h-screen bg-[#fff9f9]">
             <Navbar />
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-[90px] md:pt-[105px] pb-8">
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-gray-200 pb-6 mb-8">
                     <div>

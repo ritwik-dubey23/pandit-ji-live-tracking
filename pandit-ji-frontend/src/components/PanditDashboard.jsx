@@ -32,6 +32,45 @@ function PanditDashboard() {
     const [togglingOnline, setTogglingOnline] = useState(false);
     const [selectedBookingForTracking, setSelectedBookingForTracking] = useState(null);
 
+    // Notifications State
+    const [notifications, setNotifications] = useState([]);
+    const [showNotificationsDropdown, setShowNotificationsDropdown] = useState(false);
+    const [loadingNotifications, setLoadingNotifications] = useState(false);
+
+    const fetchNotifications = async () => {
+        try {
+            setLoadingNotifications(true);
+            const token = localStorage.getItem("pandit_ji_token");
+            const headers = token ? { Authorization: `Bearer ${token}` } : {};
+            const res = await axios.get(`${serverUrl}/api/notifications`, { headers, withCredentials: true });
+            if (Array.isArray(res.data)) {
+                setNotifications(res.data);
+            } else if (res.data?.notifications) {
+                setNotifications(res.data.notifications);
+            }
+            setLoadingNotifications(false);
+        } catch (error) {
+            setLoadingNotifications(false);
+        }
+    };
+
+    React.useEffect(() => {
+        fetchNotifications();
+    }, []);
+
+    const markAllNotificationsRead = async () => {
+        try {
+            const token = localStorage.getItem("pandit_ji_token");
+            const headers = token ? { Authorization: `Bearer ${token}` } : {};
+            await axios.put(`${serverUrl}/api/notifications/read-all`, {}, { headers, withCredentials: true });
+            setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+        } catch (error) {
+            console.error("Failed to mark notifications read", error);
+        }
+    };
+
+    const unreadCount = notifications.filter(n => !n.isRead).length;
+
     // Profile state
     const [showEditProfile, setShowEditProfile] = useState(false);
     const [name, setName] = useState(myPanditProfile?.name || '');
@@ -127,6 +166,31 @@ function PanditDashboard() {
             console.error("Profile photo upload error details:", err);
             const errorMsg = err?.response?.data?.message || err?.message || "Failed to upload profile photo. Please check network connection and try again.";
             alert(`⚠️ Profile Photo Upload Failed: ${errorMsg}`);
+        }
+    };
+
+    // 1B. Profile Background Cover Upload Handler
+    const handleBackgroundPhotoChange = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append("backgroundImage", file);
+
+        try {
+            const token = localStorage.getItem("pandit_ji_token");
+            const requestHeaders = {};
+            if (token) requestHeaders["Authorization"] = `Bearer ${token}`;
+
+            const res = await axios.post(`${serverUrl}/api/pandit/background-photo`, formData, {
+                headers: requestHeaders,
+                withCredentials: true
+            });
+
+            dispatch(setMyPanditProfile(res.data.pandit));
+            alert("Pandit Ji profile background hero image updated successfully!");
+        } catch (err) {
+            alert(`⚠️ Background Image Upload Failed: ${err?.response?.data?.message || err?.message}`);
         }
     };
 
@@ -270,8 +334,74 @@ function PanditDashboard() {
                         </div>
                     </div>
 
-                    {/* Right Actions: Online Toggle */}
+                    {/* Right Actions: Bell Icon, Online Toggle, Logout */}
                     <div className="flex items-center gap-3">
+                        {/* Notification Bell Dropdown */}
+                        <div className="relative">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setShowNotificationsDropdown(!showNotificationsDropdown);
+                                    if (!showNotificationsDropdown) fetchNotifications();
+                                }}
+                                className="relative p-2.5 rounded-full text-gray-700 hover:bg-orange-50 hover:text-[#ff4d2d] transition cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center border border-gray-200 bg-white"
+                                title="Notifications"
+                            >
+                                <FaBell size={18} />
+                                {unreadCount > 0 && (
+                                    <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center border-2 border-white animate-bounce">
+                                        {unreadCount}
+                                    </span>
+                                )}
+                            </button>
+
+                            {/* Notification Popup Modal / Dropdown */}
+                            {showNotificationsDropdown && (
+                                <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-3xl shadow-2xl border border-orange-100 z-50 overflow-hidden">
+                                    <div className="p-4 bg-gradient-to-r from-orange-500 to-amber-500 text-white flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <FaBell size={16} />
+                                            <h4 className="font-extrabold text-sm">Notifications ({notifications.length})</h4>
+                                        </div>
+                                        {unreadCount > 0 && (
+                                            <button
+                                                type="button"
+                                                onClick={markAllNotificationsRead}
+                                                className="text-[10px] font-black underline bg-white/20 hover:bg-white/30 px-2 py-1 rounded-lg cursor-pointer"
+                                            >
+                                                Mark all read
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    <div className="max-h-80 overflow-y-auto divide-y divide-gray-100 p-2">
+                                        {notifications.length === 0 ? (
+                                            <div className="p-6 text-center text-xs text-gray-500 font-semibold">
+                                                No notifications yet.
+                                            </div>
+                                        ) : (
+                                            notifications.map((n) => (
+                                                <div
+                                                    key={n._id || n.id}
+                                                    className={`p-3 rounded-2xl text-xs transition space-y-1 ${
+                                                        !n.isRead ? "bg-orange-50/70 border-l-4 border-[#ff4d2d]" : "bg-white text-gray-600"
+                                                    }`}
+                                                >
+                                                    <div className="flex items-center justify-between font-bold text-gray-900">
+                                                        <span>{n.title || "Booking Alert"}</span>
+                                                        <span className="text-[10px] text-gray-400 font-normal">
+                                                            {n.createdAt ? new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Just now"}
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-gray-700 leading-snug">{n.message || n.text}</p>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
                         <button
                             type="button"
                             onClick={handleToggleOnline}
@@ -371,6 +501,13 @@ function PanditDashboard() {
                             }`}
                         >
                             <FaUserCircle /> Pandit Profile
+                        </button>
+
+                        <button
+                            onClick={handleLogout}
+                            className="w-full flex items-center gap-2.5 px-4 py-3 rounded-2xl text-xs font-black text-red-600 hover:bg-red-50 transition cursor-pointer min-h-[44px] border border-red-100 mt-2"
+                        >
+                            <FaSignOutAlt /> Logout
                         </button>
                     </div>
                 </aside>
@@ -612,31 +749,60 @@ function PanditDashboard() {
                         <div className="bg-white p-6 rounded-3xl border border-orange-100 shadow-sm space-y-4">
                             <div className="flex items-center justify-between border-b border-gray-100 pb-3">
                                 <h3 className="text-lg font-black text-gray-900">Pandit Ji Profile Details</h3>
-                                <button
-                                    type="button"
-                                    onClick={() => setShowEditProfile(!showEditProfile)}
-                                    className="px-3.5 py-2 text-xs font-extrabold text-[#ff4d2d] bg-orange-50 hover:bg-orange-100 rounded-xl border border-orange-200 cursor-pointer min-h-[44px] flex items-center gap-1.5"
-                                >
-                                    <FaUserEdit /> {showEditProfile ? "Cancel Editing" : "Edit Profile"}
-                                </button>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowEditProfile(!showEditProfile)}
+                                        className="px-3.5 py-2 text-xs font-extrabold text-[#ff4d2d] bg-orange-50 hover:bg-orange-100 rounded-xl border border-orange-200 cursor-pointer min-h-[44px] flex items-center gap-1.5"
+                                    >
+                                        <FaUserEdit /> {showEditProfile ? "Cancel Editing" : "Edit Profile"}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={handleLogout}
+                                        className="px-3.5 py-2 text-xs font-extrabold text-red-600 bg-red-50 hover:bg-red-100 rounded-xl border border-red-200 cursor-pointer min-h-[44px] flex items-center gap-1.5"
+                                    >
+                                        <FaSignOutAlt /> Logout
+                                    </button>
+                                </div>
                             </div>
 
-                            {/* Profile Photo Display & Upload Box */}
-                            <div className="flex items-center gap-4 bg-orange-50/60 p-4 rounded-2xl border border-orange-100">
-                                <div className="relative group cursor-pointer">
-                                    <img
-                                        src={myPanditProfile?.profileImage || "/logo.png"}
-                                        alt={myPanditProfile?.name}
-                                        className="w-16 h-16 rounded-full object-cover border-2 border-orange-400 shadow-md"
-                                    />
-                                    <label className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition cursor-pointer">
-                                        {uploadingProfilePhoto ? <ClipLoader size={16} color="#fff" /> : <FaCamera size={16} />}
-                                        <input type="file" accept="image/*" className="hidden" onChange={handleProfilePhotoChange} />
-                                    </label>
+                            {/* Profile Photo Display & Background Cover Box */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="flex items-center gap-4 bg-orange-50/60 p-4 rounded-2xl border border-orange-100">
+                                    <div className="relative group cursor-pointer shrink-0">
+                                        <img
+                                            src={myPanditProfile?.profileImage || "/logo.png"}
+                                            alt={myPanditProfile?.name}
+                                            className="w-16 h-16 rounded-full object-cover border-2 border-orange-400 shadow-md"
+                                        />
+                                        <label className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition cursor-pointer">
+                                            {uploadingProfilePhoto ? <ClipLoader size={16} color="#fff" /> : <FaCamera size={16} />}
+                                            <input type="file" accept="image/*" className="hidden" onChange={handleProfilePhotoChange} />
+                                        </label>
+                                    </div>
+                                    <div>
+                                        <h4 className="text-sm font-black text-gray-900">Single Profile Photo</h4>
+                                        <p className="text-xs text-gray-500">Circular photo displayed across app & headers.</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h4 className="text-sm font-black text-gray-900">Profile Photo</h4>
-                                    <p className="text-xs text-gray-500">Click photo icon to update your public profile picture.</p>
+
+                                <div className="flex items-center gap-4 bg-stone-900 text-white p-4 rounded-2xl border border-stone-700">
+                                    <div className="relative group cursor-pointer shrink-0 w-16 h-16 rounded-xl overflow-hidden border border-amber-400 bg-stone-800 flex items-center justify-center">
+                                        {myPanditProfile?.backgroundImage ? (
+                                            <img src={myPanditProfile.backgroundImage} alt="Background" className="w-full h-full object-cover" />
+                                        ) : (
+                                            <span className="text-xl">🕉️</span>
+                                        )}
+                                        <label className="absolute inset-0 bg-black/50 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition cursor-pointer">
+                                            <FaCloudUploadAlt size={20} />
+                                            <input type="file" accept="image/*" className="hidden" onChange={handleBackgroundPhotoChange} />
+                                        </label>
+                                    </div>
+                                    <div>
+                                        <h4 className="text-sm font-black text-amber-300">Profile Hero Background</h4>
+                                        <p className="text-xs text-stone-300">Upload custom background cover image for your profile page.</p>
+                                    </div>
                                 </div>
                             </div>
 
@@ -883,7 +1049,15 @@ function PanditDashboard() {
                         activeTab === "profile" ? "text-[#ff4d2d] font-black" : "text-gray-500 font-semibold"
                     }`}
                 >
-                    <FaUserCircle size={18} />
+                    {myPanditProfile?.profileImage ? (
+                        <img
+                            src={myPanditProfile.profileImage}
+                            alt="Profile"
+                            className="w-5 h-5 rounded-full object-cover border border-amber-400 overflow-hidden aspect-square"
+                        />
+                    ) : (
+                        <FaUserCircle size={18} />
+                    )}
                     <span className="text-[10px] mt-0.5">Profile</span>
                 </button>
             </nav>
