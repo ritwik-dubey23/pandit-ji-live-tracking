@@ -152,7 +152,7 @@ export const initSocket = (server) => {
             }
         });
 
-        // Real-Time In-App Chat Messaging Handler
+        // Real-Time In-App Chat Messaging Handler (Chat messages belong strictly inside Tracking Modal Chat)
         socket.on("send_chat_message", async (data) => {
             try {
                 const { bookingId, text, senderRole, recipientId } = data;
@@ -170,16 +170,8 @@ export const initSocket = (server) => {
                 io.to(`booking_${bookingId}`).emit("receive_chat_message", messagePayload);
 
                 if (recipientId) {
-                    const { createAndEmitNotification } = await import("./controllers/notification.controller.js");
-                    await createAndEmitNotification({
-                        recipientId,
-                        senderId: null,
-                        title: "New Chat Message 💬",
-                        message: `${senderRole === "pandit" ? "Pandit Ji" : "User"}: ${text.substring(0, 60)}${text.length > 60 ? "..." : ""}`,
-                        type: "chat_message",
-                        bookingId,
-                        data: { bookingId, text }
-                    });
+                    io.to(`user_${recipientId}`).emit("receive_chat_message", messagePayload);
+                    io.to(`pandit_${recipientId}`).emit("receive_chat_message", messagePayload);
                 }
             } catch (err) {
                 console.error("Error in send_chat_message:", err.message);

@@ -3,8 +3,9 @@ import axios from 'axios';
 import { useDispatch } from 'react-redux';
 import { updatePanditBookingStatusInState } from '../redux/panditSlice';
 import { socket } from '../socket';
-import { FaPhone, FaMapMarkerAlt, FaUser, FaRoute, FaCheckDouble, FaCompass, FaChevronRight } from 'react-icons/fa';
+import { FaPhone, FaMapMarkerAlt, FaUser, FaRoute, FaCheckDouble, FaCompass, FaChevronRight, FaMapMarkedAlt } from 'react-icons/fa';
 import { ClipLoader } from 'react-spinners';
+import { openGoogleMapsDirections } from '../utils/locationUtils';
 
 const serverUrl = import.meta.env.VITE_SERVER_URL || "http://localhost:8000";
 
@@ -12,6 +13,12 @@ function PanditActiveBookingCard({ booking, onViewMap }) {
     const dispatch = useDispatch();
     const [loading, setLoading] = useState(false);
     const watchIdRef = useRef(null);
+
+    const handleOpenGoogleMaps = () => {
+        const userLat = booking.userLocation?.latitude;
+        const userLng = booking.userLocation?.longitude;
+        openGoogleMapsDirections(userLat, userLng, booking.address);
+    };
 
     const statusSteps = [
         { id: "accepted", label: "Accepted" },
@@ -166,13 +173,22 @@ function PanditActiveBookingCard({ booking, onViewMap }) {
             </div>
 
             {/* Action Buttons: Next Status & Navigation */}
-            <div className="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="pt-2 grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
                 <button
                     type="button"
                     onClick={onViewMap}
-                    className="py-3 px-4 rounded-2xl text-xs font-black text-[#ff4d2d] bg-orange-50 hover:bg-orange-100 border-2 border-orange-200 transition duration-150 cursor-pointer flex items-center justify-center gap-2 min-h-[44px]"
+                    className="py-3 px-3 rounded-2xl text-xs font-black text-[#ff4d2d] bg-orange-50 hover:bg-orange-100 border-2 border-orange-200 transition duration-150 cursor-pointer flex items-center justify-center gap-1.5 min-h-[44px]"
                 >
-                    <FaCompass size={16} /> VIEW LIVE MAP ROUTE
+                    <FaCompass size={15} /> VIEW LIVE MAP
+                </button>
+
+                <button
+                    type="button"
+                    onClick={handleOpenGoogleMaps}
+                    className="py-3 px-3 rounded-2xl text-xs font-black text-blue-600 bg-blue-50 hover:bg-blue-100 border-2 border-blue-200 transition duration-150 cursor-pointer flex items-center justify-center gap-1.5 min-h-[44px]"
+                    title="Open in Google Maps"
+                >
+                    <FaMapMarkedAlt size={15} /> 🗺️ GOOGLE MAPS
                 </button>
 
                 {nextStep ? (

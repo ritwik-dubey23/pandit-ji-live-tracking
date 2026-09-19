@@ -51,11 +51,11 @@ function Footer() {
                     <ul className="space-y-3 text-xs">
                         <li className="flex items-start gap-2.5">
                             <FaMapMarkerAlt className="text-amber-400 mt-0.5 shrink-0" size={14} />
-                            <span>Indore, Madhya Pradesh - 452010</span>
+                            <span className="font-bold text-gray-200">Khargone, M.P.</span>
                         </li>
                         <li className="flex items-center gap-2.5">
                             <FaPhoneAlt className="text-amber-400 shrink-0" size={13} />
-                            <a href="tel:+919826011111" className="hover:text-amber-400">+91 98260 11111</a>
+                            <a href="tel:+919669834243" className="font-extrabold text-amber-400 hover:underline">+91 9669834243</a>
                         </li>
                         <li className="flex items-center gap-2.5">
                             <FaEnvelope className="text-amber-400 shrink-0" size={13} />

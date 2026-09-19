@@ -115,17 +115,22 @@ export function ContactPage() {
                     <div className="p-5 bg-orange-50/50 rounded-2xl border border-orange-100 space-y-2">
                         <FaPhoneAlt className="mx-auto text-[#ff4d2d]" size={24} />
                         <h4 className="font-bold text-sm text-gray-900">Phone</h4>
-                        <p className="text-xs text-gray-600 font-semibold">+91 98260 11111</p>
+                        <a href="tel:+919669834243" className="text-sm font-extrabold text-[#ff4d2d] hover:underline block">
+                            +91 9669834243
+                        </a>
+                        <span className="text-[10px] text-gray-500 font-bold block">(Tap to Call)</span>
                     </div>
                     <div className="p-5 bg-orange-50/50 rounded-2xl border border-orange-100 space-y-2">
                         <FaEnvelope className="mx-auto text-[#ff4d2d]" size={24} />
                         <h4 className="font-bold text-sm text-gray-900">Email</h4>
-                        <p className="text-xs text-gray-600 font-semibold">support@maharajji.com</p>
+                        <a href="mailto:support@maharajji.com" className="text-xs font-bold text-gray-800 hover:text-[#ff4d2d] block">
+                            support@maharajji.com
+                        </a>
                     </div>
                     <div className="p-5 bg-orange-50/50 rounded-2xl border border-orange-100 space-y-2">
                         <FaMapMarkerAlt className="mx-auto text-[#ff4d2d]" size={24} />
                         <h4 className="font-bold text-sm text-gray-900">Address</h4>
-                        <p className="text-xs text-gray-600 font-semibold">Vijay Nagar, Indore, M.P.</p>
+                        <p className="text-xs font-black text-gray-900">Khargone, M.P.</p>
                     </div>
                 </div>
             </div>

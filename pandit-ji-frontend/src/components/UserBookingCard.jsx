@@ -3,8 +3,9 @@ import axios from 'axios';
 import { useDispatch } from 'react-redux';
 import { updateBookingStatusInState } from '../redux/userSlice';
 import LiveTrackingModal from './LiveTrackingModal';
-import { FaCalendarAlt, FaClock, FaMapMarkerAlt, FaPrayingHands, FaPhone, FaCheckCircle, FaTimesCircle, FaHourglassHalf, FaRoute, FaStar, FaRegStar } from 'react-icons/fa';
+import { FaCalendarAlt, FaClock, FaMapMarkerAlt, FaPrayingHands, FaPhone, FaCheckCircle, FaTimesCircle, FaHourglassHalf, FaRoute, FaStar, FaRegStar, FaMapMarkedAlt } from 'react-icons/fa';
 import { ClipLoader } from 'react-spinners';
+import { openGoogleMapsDirections } from '../utils/locationUtils';
 
 const serverUrl = import.meta.env.VITE_SERVER_URL || "http://localhost:8000";
 
@@ -17,6 +18,12 @@ function UserBookingCard({ booking }) {
     const [reviewComment, setReviewComment] = useState("");
     const [submittingRating, setSubmittingRating] = useState(false);
     const [ratingErr, setRatingErr] = useState("");
+
+    const handleOpenGoogleMaps = () => {
+        const panditLat = booking.panditLocation?.latitude;
+        const panditLng = booking.panditLocation?.longitude;
+        openGoogleMapsDirections(panditLat, panditLng, booking.pandit?.address || booking.pandit?.city || "");
+    };
 
     const getStatusBadge = (status) => {
         switch (status) {
@@ -125,14 +132,23 @@ function UserBookingCard({ booking }) {
                     <span className="text-lg font-extrabold text-gray-900">₹{booking.totalAmount}</span>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                     {["pending", "accepted", "on_the_way", "arriving", "reached", "started"].includes(booking.status) && (
-                        <button
-                            onClick={() => setShowTracking(true)}
-                            className="px-3.5 py-2 text-xs font-black text-white bg-[#ff4d2d] hover:bg-[#e64323] rounded-xl shadow-md transition duration-150 cursor-pointer flex items-center gap-1.5 min-h-[44px]"
-                        >
-                            <FaRoute /> TRACK PANDIT LIVE
-                        </button>
+                        <>
+                            <button
+                                onClick={() => setShowTracking(true)}
+                                className="px-3 py-2 text-xs font-black text-white bg-[#ff4d2d] hover:bg-[#e64323] rounded-xl shadow-md transition duration-150 cursor-pointer flex items-center gap-1.5 min-h-[44px]"
+                            >
+                                <FaRoute /> TRACK LIVE
+                            </button>
+                            <button
+                                onClick={handleOpenGoogleMaps}
+                                className="px-3 py-2 text-xs font-black text-blue-600 bg-blue-50 border border-blue-200 hover:bg-blue-100 rounded-xl transition duration-150 cursor-pointer flex items-center gap-1.5 min-h-[44px]"
+                                title="Open in Google Maps"
+                            >
+                                <FaMapMarkedAlt size={14} /> 🗺️ Google Maps
+                            </button>
+                        </>
                     )}
 
                     {booking.status === "completed" && (

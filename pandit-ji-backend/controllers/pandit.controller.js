@@ -1,4 +1,5 @@
 import fs from "fs";
+import mongoose from "mongoose";
 import Pandit from "../models/pandit.model.js";
 import User from "../models/user.models.js";
 import Review from "../models/review.model.js";
@@ -31,6 +32,9 @@ export const getAllPandits = async (req, res) => {
 
 export const getPanditById = async (req, res) => {
     try {
+        if (!req.params.id || req.params.id === "undefined" || req.params.id === "null" || !mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(404).json({ message: "Invalid Pandit Ji ID" });
+        }
         const pandit = await Pandit.findById(req.params.id).populate("user", "fullName email mobile");
         if (!pandit) {
             return res.status(404).json({ message: "Pandit Ji profile not found" });
@@ -40,7 +44,8 @@ export const getPanditById = async (req, res) => {
         panditObj.reviews = reviews;
         return res.status(200).json(panditObj);
     } catch (error) {
-        return res.status(500).json({ message: "Error fetching Pandit Ji details" });
+        console.error("getPanditById error:", error);
+        return res.status(500).json({ message: "Error fetching Pandit Ji details: " + error.message });
     }
 };
 

@@ -56,11 +56,13 @@ function BookingModal({ pandit, initialService, onClose }) {
     const [error, setError] = useState('');
 
     // Calculate total price
+    const isBhojanSevaService = selectedService.toLowerCase().includes("bhojan");
     const currentServiceObj = (pandit?.services || []).find(s => s.name.toLowerCase() === selectedService.toLowerCase());
-    let basePrice = currentServiceObj ? currentServiceObj.price : (selectedService.toLowerCase().includes("bhojan") ? 500 : 1100);
+    let basePrice = currentServiceObj ? currentServiceObj.price : (isBhojanSevaService ? 0 : 1100);
+    if (isBhojanSevaService) basePrice = 0; // ₹0 Platform charge for Bhojan Seva invitation
     if (isCustomPooja) basePrice = 1500; // base default for custom
-    const bhojanAddon = bhojanSeva && !selectedService.toLowerCase().includes("bhojan") ? numberOfPeople * 50 : 0;
-    const totalAmount = basePrice + bhojanAddon;
+    const bhojanAddon = (bhojanSeva && !isBhojanSevaService) ? numberOfPeople * 50 : 0;
+    const totalAmount = isBhojanSevaService ? 0 : (basePrice + bhojanAddon);
 
     const handleCreateBooking = async (e) => {
         e.preventDefault();
@@ -360,7 +362,7 @@ function BookingModal({ pandit, initialService, onClose }) {
                                 <option value="Hawan">Hawan — ₹1500</option>
                                 <option value="Shiv Puja">Shiv Puja — ₹1100</option>
                                 <option value="Marriage Puja">Marriage Puja — ₹5100</option>
-                                <option value="Bhojan Seva">Bhojan Seva — ₹500</option>
+                                <option value="Bhojan Seva">🍚 Bhojan Seva Invitation — ₹0 (Dakshina: Mutually Decided)</option>
                                 <option value="Mundan">Mundan Ceremony — ₹1500</option>
                             </select>
                         ) : (

@@ -28,7 +28,7 @@ const useGetMyBookings = () => {
                         (b.status === "reached" || b.status === "started") && !b.userArrivalConfirmed
                     );
                     if (unconfirmedReached) {
-                        playPanditArrivedSound(unconfirmedReached._id);
+                        // DO NOT PLAY SOUND ON FETCH/PAGE LOAD/REFRESH (Sound plays ONLY on live socket event)
                         dispatch(setArrivalPopup({
                             title: "Pandit Ji Reached Venue! 🙏",
                             message: `${unconfirmedReached.pandit?.name || 'Pandit Ji'} has reached your venue location. Please confirm arrival.`,

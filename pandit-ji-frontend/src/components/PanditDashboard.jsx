@@ -85,6 +85,7 @@ function PanditDashboard() {
 
     // Add Service state
     const [showAddService, setShowAddService] = useState(false);
+    const [editingServiceId, setEditingServiceId] = useState(null);
     const [serviceName, setServiceName] = useState('');
     const [servicePrice, setServicePrice] = useState('');
     const [serviceDesc, setServiceDesc] = useState('');
@@ -226,6 +227,9 @@ function PanditDashboard() {
         setSavingService(true);
         try {
             const formData = new FormData();
+            if (editingServiceId) {
+                formData.append("serviceId", editingServiceId);
+            }
             formData.append("name", serviceName);
             formData.append("price", servicePrice);
             formData.append("description", serviceDesc);
@@ -242,16 +246,37 @@ function PanditDashboard() {
             dispatch(setMyPanditProfile(res.data.pandit));
             setSavingService(false);
             setShowAddService(false);
+            setEditingServiceId(null);
             setServiceName('');
             setServicePrice('');
             setServiceDesc('');
             setServiceImageFile(null);
-            alert("New Pooja service added successfully!");
+            alert(editingServiceId ? "Pooja service updated successfully!" : "New Pooja service added successfully!");
         } catch (error) {
             setSavingService(false);
-            console.error("Add Service Error:", error);
-            alert(error?.response?.data?.message || "Failed to add service. Please try again.");
+            console.error("Save Service Error:", error);
+            alert(error?.response?.data?.message || "Failed to save service. Please try again.");
         }
+    };
+
+    const handleStartEditService = (service) => {
+        setEditingServiceId(service._id);
+        setServiceName(service.name || '');
+        setServicePrice(service.price || '');
+        setServiceDesc(service.description || '');
+        setServiceDuration(service.duration || '2 Hours');
+        setServiceImageFile(null);
+        setShowAddService(true);
+    };
+
+    const handleResetServiceForm = () => {
+        setEditingServiceId(null);
+        setServiceName('');
+        setServicePrice('');
+        setServiceDesc('');
+        setServiceDuration('2 Hours');
+        setServiceImageFile(null);
+        setShowAddService(!showAddService);
     };
 
     // 2. Service Multiple Photos Upload Handler
@@ -716,17 +741,36 @@ function PanditDashboard() {
                                     <p className="text-xs text-gray-500 mt-0.5">Upload photos for Havan, Hawan Kund, and ritual arrangements.</p>
                                 </div>
                                 <button
-                                    onClick={() => setShowAddService(!showAddService)}
+                                    onClick={handleResetServiceForm}
                                     className="px-4 py-2.5 bg-[#ff4d2d] text-white text-xs font-black rounded-xl shadow-md cursor-pointer flex items-center gap-1.5 min-h-[44px]"
                                 >
-                                    <FaPlus /> Add New Service
+                                    <FaPlus /> {showAddService && !editingServiceId ? "Close Form" : "+ Add New Service"}
                                 </button>
                             </div>
 
-                            {/* Add Service Form */}
+                            {/* Add / Edit Service Form */}
                             {showAddService && (
                                 <form onSubmit={handleAddService} className="bg-white p-5 rounded-3xl border border-orange-200 space-y-3 shadow-md">
-                                    <h4 className="font-extrabold text-sm text-gray-900">Add New Pooja Service</h4>
+                                    <div className="flex items-center justify-between border-b border-orange-100 pb-2">
+                                        <h4 className="font-extrabold text-sm text-gray-900">
+                                            {editingServiceId ? "✏️ Edit Pooja Service" : "Add New Pooja Service"}
+                                        </h4>
+                                        {editingServiceId && (
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setEditingServiceId(null);
+                                                    setServiceName('');
+                                                    setServicePrice('');
+                                                    setServiceDesc('');
+                                                    setShowAddService(false);
+                                                }}
+                                                className="text-xs text-red-500 hover:underline font-bold"
+                                            >
+                                                Cancel Edit
+                                            </button>
+                                        )}
+                                    </div>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                         <input
                                             type="text"
@@ -768,7 +812,7 @@ function PanditDashboard() {
                                         disabled={savingService}
                                         className="w-full py-3 bg-green-600 text-white font-black text-xs rounded-xl shadow-md min-h-[44px] cursor-pointer"
                                     >
-                                        {savingService ? <ClipLoader size={16} color="#fff" /> : "Save Service"}
+                                        {savingService ? <ClipLoader size={16} color="#fff" /> : (editingServiceId ? "Update Service" : "Save Service")}
                                     </button>
                                 </form>
                             )}
@@ -788,8 +832,16 @@ function PanditDashboard() {
                                                     <p className="text-xs text-gray-500 mt-0.5">{s.description || "Authentic Vedic ritual"}</p>
                                                     <span className="text-xs font-bold text-gray-400 mt-1 block">Duration: {s.duration}</span>
                                                 </div>
-                                                <div className="flex items-center gap-3">
+                                                <div className="flex items-center gap-2">
                                                     <span className="text-xl font-black text-[#ff4d2d]">₹{s.price}</span>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleStartEditService(s)}
+                                                        className="px-3 py-1.5 bg-orange-50 hover:bg-orange-100 text-[#ff4d2d] border border-orange-200 rounded-xl text-xs font-bold transition cursor-pointer min-h-[44px] flex items-center gap-1"
+                                                        title="Edit Service Details"
+                                                    >
+                                                        <FaUserEdit size={14} /> <span>Edit Service</span>
+                                                    </button>
                                                     <button
                                                         type="button"
                                                         onClick={() => setServiceToDelete(s._id)}
@@ -853,63 +905,25 @@ function PanditDashboard() {
 
                     {/* TAB: PROFILE */}
                     {activeTab === "profile" && (
-                        <div className="bg-white p-6 rounded-3xl border border-orange-100 shadow-sm space-y-4">
-                            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-                                <h3 className="text-lg font-black text-gray-900">Pandit Ji Profile Details</h3>
-                                <div className="flex items-center gap-2">
+                        <div className="bg-white p-6 sm:p-8 rounded-3xl border border-orange-100 shadow-sm space-y-6 max-w-3xl mx-auto">
+                            <div className="flex flex-col items-center text-center border-b border-gray-100 pb-4">
+                                <h3 className="text-xl font-black text-gray-900">Pandit Ji Profile Details</h3>
+                                <p className="text-xs text-gray-500 font-semibold mt-1">Manage your account information & contact details</p>
+                                <div className="flex items-center justify-center gap-3 mt-4">
                                     <button
                                         type="button"
                                         onClick={() => setShowEditProfile(!showEditProfile)}
-                                        className="px-3.5 py-2 text-xs font-extrabold text-[#ff4d2d] bg-orange-50 hover:bg-orange-100 rounded-xl border border-orange-200 cursor-pointer min-h-[44px] flex items-center gap-1.5"
+                                        className="px-6 py-2.5 text-xs font-black text-white bg-[#ff4d2d] hover:bg-[#e64323] shadow-md rounded-xl transition cursor-pointer min-h-[44px] flex items-center gap-2"
                                     >
-                                        <FaUserEdit /> {showEditProfile ? "Cancel Editing" : "Edit Profile"}
+                                        <FaUserEdit size={16} /> {showEditProfile ? "Cancel Editing" : "Edit Profile"}
                                     </button>
                                     <button
                                         type="button"
                                         onClick={handleLogout}
-                                        className="px-3.5 py-2 text-xs font-extrabold text-red-600 bg-red-50 hover:bg-red-100 rounded-xl border border-red-200 cursor-pointer min-h-[44px] flex items-center gap-1.5"
+                                        className="px-4 py-2.5 text-xs font-extrabold text-red-600 bg-red-50 hover:bg-red-100 rounded-xl border border-red-200 cursor-pointer min-h-[44px] flex items-center gap-1.5"
                                     >
-                                        <FaSignOutAlt /> Logout
+                                        <FaSignOutAlt size={14} /> Logout
                                     </button>
-                                </div>
-                            </div>
-
-                            {/* Profile Photo Display & Background Cover Box */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div className="flex items-center gap-4 bg-orange-50/60 p-4 rounded-2xl border border-orange-100">
-                                    <div className="relative group cursor-pointer shrink-0">
-                                        <img
-                                            src={myPanditProfile?.profileImage || "/logo.png"}
-                                            alt={myPanditProfile?.name}
-                                            className="w-16 h-16 rounded-full object-cover border-2 border-orange-400 shadow-md"
-                                        />
-                                        <label className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition cursor-pointer">
-                                            {uploadingProfilePhoto ? <ClipLoader size={16} color="#fff" /> : <FaCamera size={16} />}
-                                            <input type="file" accept="image/*" className="hidden" onChange={handleProfilePhotoChange} />
-                                        </label>
-                                    </div>
-                                    <div>
-                                        <h4 className="text-sm font-black text-gray-900">Single Profile Photo</h4>
-                                        <p className="text-xs text-gray-500">Circular photo displayed across app & headers.</p>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-center gap-4 bg-stone-900 text-white p-4 rounded-2xl border border-stone-700">
-                                    <div className="relative group cursor-pointer shrink-0 w-16 h-16 rounded-xl overflow-hidden border border-amber-400 bg-stone-800 flex items-center justify-center">
-                                        {myPanditProfile?.backgroundImage ? (
-                                            <img src={myPanditProfile.backgroundImage} alt="Background" className="w-full h-full object-cover" />
-                                        ) : (
-                                            <span className="text-xl">🕉️</span>
-                                        )}
-                                        <label className="absolute inset-0 bg-black/50 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition cursor-pointer">
-                                            <FaCloudUploadAlt size={20} />
-                                            <input type="file" accept="image/*" className="hidden" onChange={handleBackgroundPhotoChange} />
-                                        </label>
-                                    </div>
-                                    <div>
-                                        <h4 className="text-sm font-black text-amber-300">Profile Hero Background</h4>
-                                        <p className="text-xs text-stone-300">Upload custom background cover image for your profile page.</p>
-                                    </div>
                                 </div>
                             </div>
 

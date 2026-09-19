@@ -25,6 +25,20 @@ function ServiceDetails() {
     const [activePhotoIndex, setActivePhotoIndex] = useState(0);
     const [showBookingModal, setShowBookingModal] = useState(false);
     const [lightboxPhoto, setLightboxPhoto] = useState(null);
+    const [autoSlideEnabled, setAutoSlideEnabled] = useState(true);
+
+    const allPhotos = Array.from(
+        new Set([service?.image, ...(service?.photos || []), pandit?.profileImage].filter(Boolean))
+    );
+    const photosCount = allPhotos.length;
+
+    useEffect(() => {
+        if (!autoSlideEnabled || photosCount <= 1) return;
+        const interval = setInterval(() => {
+            setActivePhotoIndex((prev) => (photosCount > 0 ? (prev + 1) % photosCount : 0));
+        }, 3500);
+        return () => clearInterval(interval);
+    }, [autoSlideEnabled, photosCount]);
 
     useEffect(() => {
         const fetchServiceAndPandit = async () => {
@@ -39,7 +53,7 @@ function ServiceDetails() {
 
                 for (const p of allPandits) {
                     if (p.services && Array.isArray(p.services)) {
-                        const match = p.services.find(s => s._id.toString() === serviceId || s.name.toLowerCase().replace(/\s+/g, '-') === serviceId.toLowerCase());
+                        const match = p.services.find(s => s && s._id && (s._id.toString() === serviceId || (s.name && s.name.toLowerCase().replace(/\s+/g, '-') === serviceId.toLowerCase())));
                         if (match) {
                             foundService = match;
                             foundPandit = p;
@@ -107,30 +121,13 @@ function ServiceDetails() {
         );
     }
 
-    const allPhotos = [
-        service.image,
-        ...(service.photos || []),
-        pandit.profileImage
-    ].filter(Boolean);
-
-    // Auto-slide image carousel (3.5s interval with pause on hover)
-    const [autoSlideEnabled, setAutoSlideEnabled] = useState(true);
-
     const prevSlide = () => {
-        setActivePhotoIndex((prev) => (prev === 0 ? allPhotos.length - 1 : prev - 1));
+        setActivePhotoIndex((prev) => (allPhotos.length > 0 ? (prev === 0 ? allPhotos.length - 1 : prev - 1) : 0));
     };
 
     const nextSlide = () => {
-        setActivePhotoIndex((prev) => (prev + 1) % allPhotos.length);
+        setActivePhotoIndex((prev) => (allPhotos.length > 0 ? (prev + 1) % allPhotos.length : 0));
     };
-
-    useEffect(() => {
-        if (!autoSlideEnabled || allPhotos.length <= 1) return;
-        const interval = setInterval(() => {
-            setActivePhotoIndex((prev) => (prev + 1) % allPhotos.length);
-        }, 3500);
-        return () => clearInterval(interval);
-    }, [autoSlideEnabled, allPhotos.length]);
 
     return (
         <div className="min-h-screen bg-[#fff9f5] flex flex-col justify-between">
