@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import Navbar from '../components/Navbar';
 import UserBookingCard from '../components/UserBookingCard';
 import useGetMyBookings from '../hooks/useGetMyBookings';
-import { FaCalendarCheck, FaHands } from 'react-icons/fa';
+import { FaCalendarAlt, FaHands } from 'react-icons/fa';
 
 function MyBookings() {
     useGetMyBookings();

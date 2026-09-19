@@ -906,22 +906,46 @@ function PanditDashboard() {
                     {/* TAB: PROFILE */}
                     {activeTab === "profile" && (
                         <div className="bg-white p-6 sm:p-8 rounded-3xl border border-orange-100 shadow-sm space-y-6 max-w-3xl mx-auto">
-                            <div className="flex flex-col items-center text-center border-b border-gray-100 pb-6 space-y-3">
+                            <div className="flex flex-col items-center text-center border-b border-gray-100 pb-6 space-y-4">
                                 {/* CENTERED PROFILE PHOTO WITH EDIT PHOTO BUTTON */}
-                                <div className="relative group">
-                                    <img
-                                        src={myPanditProfile?.profileImage || "/logo.png"}
-                                        alt={myPanditProfile?.name || "Pandit Ji"}
-                                        className="w-28 h-28 sm:w-32 sm:h-32 rounded-full object-cover border-4 border-[#ff4d2d] shadow-lg aspect-square"
-                                    />
-                                    <label
-                                        className="absolute bottom-0 right-0 bg-[#ff4d2d] hover:bg-[#e64323] text-white p-2.5 rounded-full shadow-md cursor-pointer transition flex items-center justify-center border-2 border-white"
-                                        title="Change Profile Photo"
-                                    >
+                                <div className="flex flex-col items-center justify-center space-y-3">
+                                    <div className="relative group">
+                                        <img
+                                            src={myPanditProfile?.profileImage || "/logo.png"}
+                                            alt={myPanditProfile?.name || "Pandit Ji"}
+                                            className="w-32 h-32 sm:w-36 sm:h-36 rounded-full object-cover border-4 border-[#ff4d2d] shadow-xl aspect-square"
+                                        />
+                                        <label
+                                            className="absolute bottom-1 right-1 bg-[#ff4d2d] hover:bg-[#e64323] text-white p-3 rounded-full shadow-lg cursor-pointer transition flex items-center justify-center border-2 border-white"
+                                            title="Change Profile Photo"
+                                        >
+                                            {uploadingProfilePhoto ? (
+                                                <ClipLoader size={18} color="#fff" />
+                                            ) : (
+                                                <FaCamera size={18} />
+                                            )}
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                className="hidden"
+                                                onChange={handleProfilePhotoChange}
+                                                disabled={uploadingProfilePhoto}
+                                            />
+                                        </label>
+                                    </div>
+
+                                    {/* EXPLICIT CENTERED UPLOAD BUTTON */}
+                                    <label className="inline-flex items-center gap-2 px-5 py-2.5 bg-orange-50 hover:bg-orange-100 text-[#ff4d2d] border-2 border-orange-200 rounded-2xl text-xs font-black cursor-pointer transition shadow-xs min-h-[44px]">
                                         {uploadingProfilePhoto ? (
-                                            <ClipLoader size={16} color="#fff" />
+                                            <>
+                                                <ClipLoader size={14} color="#ff4d2d" />
+                                                <span>Uploading Photo...</span>
+                                            </>
                                         ) : (
-                                            <FaCamera size={16} />
+                                            <>
+                                                <FaCamera size={15} />
+                                                <span>📷 UPLOAD NEW PROFILE PHOTO</span>
+                                            </>
                                         )}
                                         <input
                                             type="file"
@@ -963,6 +987,21 @@ function PanditDashboard() {
                             {/* EDIT PROFILE FORM */}
                             {showEditProfile ? (
                                 <form onSubmit={handleSaveProfile} className="space-y-4 pt-2">
+                                    {/* Centered Photo Upload inside Form */}
+                                    <div className="flex flex-col items-center justify-center p-4 bg-orange-50/60 rounded-2xl border border-orange-200 mb-4 text-center space-y-2">
+                                        <span className="text-xs font-black text-gray-800">Update Pandit Ji Profile Photo</span>
+                                        <label className="inline-flex items-center gap-2 px-4 py-2 bg-[#ff4d2d] hover:bg-[#e64323] text-white rounded-xl text-xs font-black cursor-pointer transition shadow-md min-h-[44px]">
+                                            {uploadingProfilePhoto ? <ClipLoader size={14} color="#fff" /> : <FaCamera size={14} />}
+                                            <span>{uploadingProfilePhoto ? "Uploading..." : "📷 Choose Photo from Device"}</span>
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                className="hidden"
+                                                onChange={handleProfilePhotoChange}
+                                                disabled={uploadingProfilePhoto}
+                                            />
+                                        </label>
+                                    </div>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div>
                                             <label className="block text-xs font-extrabold text-gray-700 mb-1">Full Name</label>
