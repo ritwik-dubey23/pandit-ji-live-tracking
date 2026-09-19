@@ -76,3 +76,33 @@ export const playNotificationSound = (notificationId = null) => {
         return false;
     }
 };
+
+const playedBookingConfirmationIds = new Set();
+
+export const playBookingConfirmationSound = (bookingId) => {
+    if (!bookingId) return false;
+
+    if (playedBookingConfirmationIds.has(bookingId)) {
+        console.log(`[AUDIO DUP GUARD] Confirmation sound already played for booking: ${bookingId}`);
+        return false;
+    }
+
+    playedBookingConfirmationIds.add(bookingId);
+
+    try {
+        const audio = new Audio("/booking-confirmed.mp3");
+        audio.volume = 1.0;
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+            playPromise.catch(err => {
+                console.warn("[AUDIO PLAYBACK WARN] HTML5 Audio autoplay prevented by browser:", err.message);
+                // Web Audio API synth fallback if HTML5 Audio autoplay blocked
+                playNotificationSound(bookingId);
+            });
+        }
+        return true;
+    } catch (err) {
+        console.warn("[AUDIO ERROR] Failed to play booking confirmation sound:", err.message);
+        return false;
+    }
+};

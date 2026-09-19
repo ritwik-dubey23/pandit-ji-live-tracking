@@ -10,7 +10,7 @@ import useCurrentLocation from '../hooks/useCurrentLocation';
 
 const serverUrl = import.meta.env.VITE_SERVER_URL || "http://localhost:8000";
 
-import { playNotificationSound } from '../utils/audio';
+import { playNotificationSound, playBookingConfirmationSound } from '../utils/audio';
 
 function BookingModal({ pandit, initialService, onClose }) {
     const primaryColor = "#ff4d2d";
@@ -119,7 +119,7 @@ function BookingModal({ pandit, initialService, onClose }) {
 
             const res = await axios.post(`${serverUrl}/api/booking/create`, payload, { withCredentials: true });
             dispatch(addBooking(res.data.booking));
-            playNotificationSound(res.data.booking._id);
+            playBookingConfirmationSound(res.data.booking._id);
             setLoading(false);
             setCreatedBooking(res.data.booking);
         } catch (err) {
