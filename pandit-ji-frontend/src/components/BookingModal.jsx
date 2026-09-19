@@ -131,21 +131,21 @@ function BookingModal({ pandit, initialService, onClose }) {
     };
 
     return (
-        <div className="fixed inset-0 z-[99999] flex items-start justify-center p-2 sm:p-4 pt-14 md:pt-20 bg-black/75 backdrop-blur-xs overflow-y-auto">
-            <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-xl overflow-hidden border border-orange-100 my-2 sm:my-6 transition-all duration-300 max-h-[90vh] flex flex-col">
+        <div className="fixed inset-0 z-[99999] flex items-start sm:items-center justify-center p-2 sm:p-4 pt-12 sm:pt-20 bg-black/75 backdrop-blur-xs overflow-y-auto">
+            <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-xl overflow-hidden border border-orange-100 my-auto transition-all duration-300 max-h-[92vh] flex flex-col">
                 {/* Modal Header */}
                 <div className="p-3.5 sm:p-5 text-white flex items-center justify-between shrink-0" style={{ backgroundColor: primaryColor }}>
-                    <div>
-                        <h3 className="text-base sm:text-xl font-black leading-snug">
+                    <div className="min-w-0 flex-1 pr-2">
+                        <h3 className="text-sm sm:text-xl font-black leading-tight truncate">
                             {createdBooking ? "Booking Confirmed 🎉" : `Book Pandit Ji: ${pandit.name}`}
                         </h3>
-                        <p className="text-[11px] sm:text-xs text-orange-100 mt-0.5">
+                        <p className="text-[10px] sm:text-xs text-orange-100 mt-0.5 truncate">
                             {pandit.city}, {pandit.state} • {pandit.experienceYears || 5} Yrs Experience
                         </p>
                     </div>
                     <button
                         onClick={onClose}
-                        className="p-1.5 sm:p-2 rounded-full hover:bg-white/20 text-white transition duration-150 cursor-pointer"
+                        className="p-1.5 sm:p-2 rounded-full hover:bg-white/20 text-white transition duration-150 cursor-pointer shrink-0"
                     >
                         <FaTimes size={16} />
                     </button>

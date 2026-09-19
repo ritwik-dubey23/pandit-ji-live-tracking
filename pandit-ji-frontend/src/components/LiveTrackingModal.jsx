@@ -251,9 +251,13 @@ function LiveTrackingModal({ booking, currentUserRole, onClose, onStatusUpdated 
         setNewMessage("");
         playChatMessageSentSound();
 
-        const recipientId = currentUserRole === "pandit"
-            ? (booking.user?._id || booking.user)
-            : (booking.pandit?.user?._id || booking.pandit?.user);
+        let recipientId = null;
+        if (currentUserRole === "pandit") {
+            recipientId = typeof booking.user === 'object' ? booking.user?._id : booking.user;
+        } else {
+            const pUser = booking.pandit?.user;
+            recipientId = typeof pUser === 'object' ? pUser?._id : (pUser || booking.pandit?._id);
+        }
 
         socket.emit("send_chat_message", {
             bookingId: booking._id,
@@ -302,15 +306,15 @@ function LiveTrackingModal({ booking, currentUserRole, onClose, onStatusUpdated 
                     <div ref={mapRef} className="w-full h-full"></div>
 
                     {/* TOP FLOATING PILL WITH GOOGLE MAPS NAVIGATION DEEP LINK */}
-                    <div className="absolute top-4 inset-x-12 z-[1000] flex justify-center pointer-events-none">
-                        <div className="bg-white/95 backdrop-blur-md px-4 py-2 rounded-full shadow-xl border border-orange-200 flex items-center gap-2 text-center pointer-events-auto">
-                            <span className="w-2.5 h-2.5 rounded-full bg-green-500 animate-ping"></span>
-                            <p className="text-xs sm:text-sm font-black text-gray-900 truncate">
+                    <div className="absolute top-3 inset-x-2 sm:inset-x-12 z-[1000] flex justify-center pointer-events-none">
+                        <div className="bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-full shadow-xl border border-orange-200 flex items-center gap-1.5 text-center pointer-events-auto max-w-[95%]">
+                            <span className="w-2 h-2 rounded-full bg-green-500 animate-ping shrink-0"></span>
+                            <p className="text-[11px] sm:text-xs font-black text-gray-900 truncate">
                                 Arriving in <span className="text-[#ff4d2d]">{eta} mins</span> ({distance} km)
                             </p>
                             <button
                                 onClick={handleOpenGoogleMaps}
-                                className="ml-1 px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-full text-[11px] font-black shadow-sm flex items-center gap-1 cursor-pointer transition active:scale-95"
+                                className="ml-1 px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-full text-[10px] sm:text-[11px] font-black shadow-sm flex items-center gap-1 cursor-pointer transition active:scale-95 shrink-0"
                                 title="Open in Google Maps"
                             >
                                 <FaMapMarkedAlt size={12} />
@@ -320,60 +324,61 @@ function LiveTrackingModal({ booking, currentUserRole, onClose, onStatusUpdated 
                     </div>
                 </div>
 
-                {/* 2. BOTTOM BOTTOM-SHEET / CARD (180154.jpg SCREEN 3 LAYOUT) */}
-                <div className="flex-1 bg-white p-5 flex flex-col justify-between overflow-y-auto">
+                {/* 2. BOTTOM BOTTOM-SHEET / CARD */}
+                <div className="flex-1 bg-white p-3.5 sm:p-5 flex flex-col justify-between overflow-y-auto">
                     {/* PANDIT PROFILE & DYNAMIC STATUS */}
-                    <div className="flex items-center justify-between border-b border-gray-100 pb-4">
-                        <div className="flex items-center gap-3.5">
-                            <img
-                                src={panditImage}
-                                alt={panditName}
-                                className="w-14 h-14 rounded-full object-cover border-2 border-orange-400 shadow-md shrink-0"
-                            />
-                            <div>
-                                <h3 className="text-base font-extrabold text-gray-900">{panditName}</h3>
-                                <div className="flex items-center gap-2 mt-0.5">
-                                    <span className="flex items-center gap-1 text-xs font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
-                                        <FaStar size={12} className="text-amber-500" /> {panditRating} ({panditReviews})
-                                    </span>
-                                    <span className="text-[11px] font-black text-green-700 bg-green-50 px-2 py-0.5 rounded-md border border-green-200 uppercase">
-                                        ● {bookingStatus.replace(/_/g, ' ')}
-                                    </span>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-3">
+                        <div className="flex items-center justify-between w-full">
+                            <div className="flex items-center gap-2.5 min-w-0 pr-2">
+                                <img
+                                    src={panditImage}
+                                    alt={panditName}
+                                    className="w-11 h-11 sm:w-14 sm:h-14 rounded-full object-cover border-2 border-orange-400 shadow-md shrink-0"
+                                />
+                                <div className="min-w-0">
+                                    <h3 className="text-xs sm:text-base font-extrabold text-gray-900 truncate">{panditName}</h3>
+                                    <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                                        <span className="flex items-center gap-1 text-[10px] sm:text-xs font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
+                                            <FaStar size={10} className="text-amber-500" /> {panditRating} ({panditReviews})
+                                        </span>
+                                        <span className="text-[10px] sm:text-[11px] font-black text-green-700 bg-green-50 px-1.5 py-0.5 rounded border border-green-200 uppercase">
+                                            ● {bookingStatus.replace(/_/g, ' ')}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
-                        {/* QUICK ACTION BUTTONS */}
-                        <div className="flex items-center gap-1.5">
-                            <button
-                                onClick={handleOpenGoogleMaps}
-                                className="px-3 py-2.5 rounded-2xl bg-blue-50 border border-blue-200 text-blue-600 hover:bg-blue-600 hover:text-white transition shadow-xs cursor-pointer min-h-[44px] flex items-center gap-1.5 text-xs font-black"
-                                title="Open in Google Maps"
-                            >
-                                <FaMapMarkedAlt size={14} />
-                                <span className="hidden xs:inline">🗺️ Open in Google Maps</span>
-                            </button>
-                            <a
-                                href={`tel:${panditPhone}`}
-                                className="w-10 h-10 rounded-2xl bg-orange-50 border border-orange-200 text-[#ff4d2d] flex items-center justify-center hover:bg-[#ff4d2d] hover:text-white transition shadow-xs cursor-pointer min-h-[44px] min-w-[44px]"
-                                title="Call"
-                            >
-                                <FaPhone size={15} />
-                            </a>
-                            <button
-                                onClick={() => setChatOpen(!chatOpen)}
-                                className="w-10 h-10 rounded-2xl bg-orange-50 border border-orange-200 text-[#ff4d2d] flex items-center justify-center hover:bg-[#ff4d2d] hover:text-white transition shadow-xs cursor-pointer min-h-[44px] min-w-[44px]"
-                                title="Chat"
-                            >
-                                <FaCommentDots size={16} />
-                            </button>
-                            <button
-                                onClick={handleCancelBooking}
-                                className="p-2.5 rounded-2xl bg-red-50 border border-red-200 text-red-600 text-xs font-bold hover:bg-red-600 hover:text-white transition shadow-xs cursor-pointer min-h-[44px] flex items-center gap-1"
-                                title="Cancel Booking"
-                            >
-                                <FaBan size={14} />
-                            </button>
+                            {/* QUICK ACTION BUTTONS (Compact row on mobile) */}
+                            <div className="flex items-center gap-1 shrink-0">
+                                <button
+                                    onClick={handleOpenGoogleMaps}
+                                    className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-blue-50 border border-blue-200 text-blue-600 hover:bg-blue-600 hover:text-white transition shadow-xs cursor-pointer flex items-center justify-center min-h-[36px] min-w-[36px]"
+                                    title="Open in Google Maps"
+                                >
+                                    <FaMapMarkedAlt size={14} />
+                                </button>
+                                <a
+                                    href={`tel:${panditPhone}`}
+                                    className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-orange-50 border border-orange-200 text-[#ff4d2d] flex items-center justify-center hover:bg-[#ff4d2d] hover:text-white transition shadow-xs cursor-pointer min-h-[36px] min-w-[36px]"
+                                    title="Call"
+                                >
+                                    <FaPhone size={13} />
+                                </a>
+                                <button
+                                    onClick={() => setChatOpen(!chatOpen)}
+                                    className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-orange-50 border border-orange-200 text-[#ff4d2d] flex items-center justify-center hover:bg-[#ff4d2d] hover:text-white transition shadow-xs cursor-pointer min-h-[36px] min-w-[36px]"
+                                    title="Chat"
+                                >
+                                    <FaCommentDots size={14} />
+                                </button>
+                                <button
+                                    onClick={handleCancelBooking}
+                                    className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-red-50 border border-red-200 text-red-600 hover:bg-red-600 hover:text-white transition shadow-xs cursor-pointer min-h-[36px] min-w-[36px] flex items-center justify-center"
+                                    title="Cancel Booking"
+                                >
+                                    <FaBan size={13} />
+                                </button>
+                            </div>
                         </div>
                     </div>
 

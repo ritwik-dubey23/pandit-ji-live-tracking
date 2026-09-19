@@ -107,11 +107,11 @@ function Home() {
                                     </p>
 
                                     {/* HERO LOCATION BADGE */}
-                                    <div className="w-full max-w-md bg-white/95 backdrop-blur-md p-3 rounded-3xl shadow-2xl mt-6 border border-white/20 flex items-center justify-center">
-                                        <div className="flex items-center gap-2.5 px-4 py-2 bg-orange-50/90 border border-orange-200/90 rounded-2xl w-full">
-                                            <FaMapMarkerAlt className="text-[#ff4d2d] shrink-0" size={18} />
-                                            <div className="flex-1 text-left">
-                                                <span className="text-[10px] font-extrabold uppercase text-[#ff4d2d] block">Current Location</span>
+                                    <div className="w-full max-w-xs sm:max-w-md bg-white/95 backdrop-blur-md p-2 sm:p-3 rounded-2xl sm:rounded-3xl shadow-2xl mt-5 sm:mt-6 border border-white/20 flex items-center justify-center">
+                                        <div className="flex items-center gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 bg-orange-50/90 border border-orange-200/90 rounded-xl sm:rounded-2xl w-full min-w-0">
+                                            <FaMapMarkerAlt className="text-[#ff4d2d] shrink-0" size={16} />
+                                            <div className="min-w-0 flex-1 text-left">
+                                                <span className="text-[10px] font-extrabold uppercase text-[#ff4d2d] block truncate tracking-wider">Current Location</span>
                                                 <span className="text-xs font-bold text-gray-800 truncate block">
                                                     {locLoading ? "Detecting GPS location..." : location.formattedAddress}
                                                 </span>
@@ -120,9 +120,9 @@ function Home() {
                                                 type="button"
                                                 onClick={detectLocation}
                                                 title="Detect Current GPS Location"
-                                                className="p-2 hover:bg-orange-200/60 rounded-xl transition text-[#ff4d2d] shrink-0 cursor-pointer"
+                                                className="p-1.5 hover:bg-orange-200/60 rounded-xl transition text-[#ff4d2d] shrink-0 cursor-pointer min-h-[36px] min-w-[36px] flex items-center justify-center"
                                             >
-                                                <FaCrosshairs size={16} className={locLoading ? "animate-spin" : ""} />
+                                                <FaCrosshairs size={15} className={locLoading ? "animate-spin" : ""} />
                                             </button>
                                         </div>
                                     </div>

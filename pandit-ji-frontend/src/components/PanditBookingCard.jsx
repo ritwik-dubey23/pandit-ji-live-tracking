@@ -57,18 +57,18 @@ function PanditBookingCard({ booking }) {
     };
 
     return (
-        <div className="bg-white rounded-3xl shadow-lg border border-orange-100 p-6 flex flex-col justify-between hover:shadow-xl transition-all duration-200">
+        <div className="bg-white rounded-3xl shadow-lg border border-orange-100 p-3.5 sm:p-6 flex flex-col justify-between hover:shadow-xl transition-all duration-200">
             <div>
                 {/* Header */}
-                <div className="flex items-start justify-between gap-3 border-b border-gray-100 pb-4">
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 border-b border-gray-100 pb-3 sm:pb-4">
                     <div>
-                        <span className="text-[11px] font-black uppercase text-[#ff4d2d] tracking-wider bg-orange-50 px-2.5 py-1 rounded-full border border-orange-200">
+                        <span className="text-[10px] sm:text-[11px] font-black uppercase text-[#ff4d2d] tracking-wider bg-orange-50 px-2.5 py-1 rounded-full border border-orange-200 inline-block">
                             {booking.bookingType === "instant" ? "⚡ INSTANT REQUEST" : "📅 SCHEDULED REQUEST"}
                         </span>
-                        <h4 className="text-xl font-extrabold text-gray-900 mt-2">{booking.serviceName}</h4>
+                        <h4 className="text-lg sm:text-xl font-extrabold text-gray-900 mt-1.5">{booking.serviceName}</h4>
                     </div>
 
-                    <span className={`px-3 py-1 rounded-full text-xs font-black capitalize shadow-xs ${
+                    <span className={`self-start sm:self-auto px-3 py-1 rounded-full text-xs font-black capitalize shadow-xs ${
                         booking.status === 'pending' ? 'bg-amber-100 text-amber-900 border border-amber-300' :
                         booking.status === 'accepted' ? 'bg-green-100 text-green-900 border border-green-300' :
                         booking.status === 'completed' ? 'bg-blue-100 text-blue-900 border border-blue-300' :
@@ -79,53 +79,53 @@ function PanditBookingCard({ booking }) {
                 </div>
 
                 {/* User Details & Exact Address */}
-                <div className="mt-4 p-4 bg-orange-50/50 rounded-2xl border border-orange-100 space-y-2">
-                    <p className="text-sm font-black text-gray-900 flex items-center gap-2">
-                        <FaUser className="text-[#ff4d2d]" /> {booking.userName}
+                <div className="mt-3 sm:mt-4 p-3 sm:p-4 bg-orange-50/50 rounded-2xl border border-orange-100 space-y-2">
+                    <p className="text-xs sm:text-sm font-black text-gray-900 flex items-center gap-2">
+                        <FaUser className="text-[#ff4d2d] shrink-0" /> {booking.userName}
                     </p>
                     <p className="text-xs font-bold text-gray-700 flex items-center gap-2">
-                        <FaPhone className="text-[#ff4d2d]" /> <a href={`tel:${booking.userMobile}`} className="hover:underline">{booking.userMobile}</a>
+                        <FaPhone className="text-[#ff4d2d] shrink-0" /> <a href={`tel:${booking.userMobile}`} className="hover:underline">{booking.userMobile}</a>
                     </p>
                     <div className="text-xs font-semibold text-gray-700 flex items-start gap-2 pt-1 border-t border-orange-100/60">
                         <FaMapMarkerAlt className="text-[#ff4d2d] mt-0.5 shrink-0" size={14} />
                         <div>
                             <span className="font-extrabold text-gray-900 block">User's Exact Address:</span>
-                            <span className="text-gray-700">{booking.address}</span>
+                            <span className="text-gray-700 break-words">{booking.address}</span>
                         </div>
                     </div>
                 </div>
 
                 {/* Date & Time */}
-                <div className="grid grid-cols-2 gap-3 text-xs font-bold text-gray-700 mt-4">
-                    <div className="bg-amber-50/80 p-3 rounded-xl flex items-center gap-2 border border-amber-100">
-                        <FaCalendarAlt className="text-amber-700" size={15} />
-                        <div>
-                            <span className="text-[10px] text-gray-400 block font-bold uppercase">Date</span>
-                            <span>{booking.date}</span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-xs font-bold text-gray-700 mt-3 sm:mt-4">
+                    <div className="bg-amber-50/80 p-2.5 sm:p-3 rounded-xl flex items-center gap-2 border border-amber-100 truncate">
+                        <FaCalendarAlt className="text-amber-700 shrink-0" size={15} />
+                        <div className="truncate">
+                            <span className="text-[9px] sm:text-[10px] text-gray-400 block font-bold uppercase">Date</span>
+                            <span className="truncate">{booking.date}</span>
                         </div>
                     </div>
-                    <div className="bg-amber-50/80 p-3 rounded-xl flex items-center gap-2 border border-amber-100">
-                        <FaClock className="text-amber-700" size={15} />
-                        <div>
-                            <span className="text-[10px] text-gray-400 block font-bold uppercase">Time</span>
-                            <span>{booking.time}</span>
+                    <div className="bg-amber-50/80 p-2.5 sm:p-3 rounded-xl flex items-center gap-2 border border-amber-100 truncate">
+                        <FaClock className="text-amber-700 shrink-0" size={15} />
+                        <div className="truncate">
+                            <span className="text-[9px] sm:text-[10px] text-gray-400 block font-bold uppercase">Time</span>
+                            <span className="truncate">{booking.time}</span>
                         </div>
                     </div>
                 </div>
 
                 {booking.customRequirement && (
-                    <div className="mt-4 bg-amber-50 border border-amber-200 p-3 rounded-xl text-xs">
-                        <strong className="text-amber-900 block font-bold mb-1">User Requirement:</strong>
-                        <p className="text-amber-800">{booking.customRequirement}</p>
+                    <div className="mt-3 bg-amber-50 border border-amber-200 p-2.5 sm:p-3 rounded-xl text-xs">
+                        <strong className="text-amber-900 block font-bold mb-0.5">User Requirement:</strong>
+                        <p className="text-amber-800 break-words">{booking.customRequirement}</p>
                     </div>
                 )}
             </div>
 
             {/* Actions & Navigation Button */}
-            <div className="mt-5 pt-4 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                    <span className="text-xs text-gray-400 block font-bold uppercase">Dakshina / Earnings</span>
-                    <span className="text-2xl font-black text-gray-900">₹{booking.totalAmount}</span>
+            <div className="mt-4 sm:mt-5 pt-3 sm:pt-4 border-t border-gray-100 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                <div className="flex items-center justify-between sm:block">
+                    <span className="text-[10px] sm:text-xs text-gray-400 block font-bold uppercase">Dakshina / Earnings</span>
+                    <span className="text-xl sm:text-2xl font-black text-gray-900">₹{booking.totalAmount}</span>
                 </div>
 
                 <div className="flex items-center gap-2 flex-wrap">

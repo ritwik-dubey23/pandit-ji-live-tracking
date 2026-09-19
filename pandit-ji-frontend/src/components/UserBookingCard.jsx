@@ -74,62 +74,64 @@ function UserBookingCard({ booking }) {
     };
 
     return (
-        <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-5 flex flex-col justify-between hover:shadow-lg transition-all duration-200">
+        <div className="w-full bg-white rounded-2xl shadow-md border border-gray-200 p-3.5 sm:p-5 flex flex-col justify-between hover:shadow-lg transition-all duration-200">
             <div>
                 {/* Header */}
-                <div className="flex items-start justify-between gap-3 border-b border-gray-100 pb-3">
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 border-b border-gray-100 pb-3">
                     <div>
-                        <span className="text-xs font-semibold uppercase text-orange-600 tracking-wider">
+                        <span className="text-[10px] sm:text-xs font-bold uppercase text-orange-600 tracking-wider block mb-0.5">
                             {booking.bhojanSeva ? "🍚 Bhojan Seva Invitation" : (booking.bookingType === "instant" ? "⚡ Instant Booking" : "📅 Scheduled Booking")}
                         </span>
-                        <h4 className="text-lg font-bold text-gray-900 mt-0.5">{booking.serviceName}</h4>
+                        <h4 className="text-base sm:text-lg font-black text-gray-900 leading-snug">{booking.serviceName}</h4>
                     </div>
-                    {getStatusBadge(booking.status)}
+                    <div className="self-start sm:self-auto shrink-0">
+                        {getStatusBadge(booking.status)}
+                    </div>
                 </div>
 
                 {/* Pandit Info */}
-                <div className="flex items-center gap-3 mt-4 p-3 bg-orange-50/50 rounded-xl">
+                <div className="flex items-center gap-2.5 mt-3 p-2.5 sm:p-3 bg-orange-50/50 rounded-xl">
                     <img
                         src={booking.pandit?.profileImage || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400"}
                         alt={booking.pandit?.name}
-                        className="w-12 h-12 rounded-full object-cover overflow-hidden aspect-square border-2 border-orange-300"
+                        className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover overflow-hidden aspect-square border-2 border-orange-300 shrink-0"
                     />
-                    <div>
-                        <h5 className="text-sm font-bold text-gray-900">{booking.pandit?.name || "Pandit Ji"}</h5>
-                        <p className="text-xs text-gray-500">{booking.pandit?.city}, {booking.pandit?.state}</p>
+                    <div className="min-w-0 flex-1">
+                        <h5 className="text-xs sm:text-sm font-bold text-gray-900 truncate">{booking.pandit?.name || "Pandit Ji"}</h5>
+                        <p className="text-[11px] sm:text-xs text-gray-500 truncate">{booking.pandit?.city}, {booking.pandit?.state}</p>
                     </div>
                 </div>
 
                 {/* Booking Details */}
-                <div className="grid grid-cols-2 gap-3 text-xs font-medium text-gray-600 mt-4">
-                    <div className="flex items-center gap-1.5 bg-gray-50 p-2 rounded-lg">
-                        <FaCalendarAlt className="text-orange-500" />
-                        <span>Date: {booking.date}</span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-medium text-gray-600 mt-3">
+                    <div className="flex items-center gap-1.5 bg-gray-50 p-2 rounded-lg truncate">
+                        <FaCalendarAlt className="text-orange-500 shrink-0" />
+                        <span className="truncate">Date: {booking.date}</span>
                     </div>
-                    <div className="flex items-center gap-1.5 bg-gray-50 p-2 rounded-lg">
-                        <FaClock className="text-orange-500" />
-                        <span>Time: {booking.time}</span>
+                    <div className="flex items-center gap-1.5 bg-gray-50 p-2 rounded-lg truncate">
+                        <FaClock className="text-orange-500 shrink-0" />
+                        <span className="truncate">Time: {booking.time}</span>
                     </div>
                 </div>
 
-                <div className="text-xs font-medium text-gray-600 mt-2 flex items-center gap-1.5 bg-gray-50 p-2 rounded-lg">
-                    <FaMapMarkerAlt className="text-orange-500 shrink-0" />
-                    <span className="truncate">Venue: {booking.address}</span>
+                <div className="text-xs font-medium text-gray-600 mt-2 flex items-start gap-1.5 bg-gray-50 p-2 rounded-lg">
+                    <FaMapMarkerAlt className="text-orange-500 shrink-0 mt-0.5" />
+                    <span className="break-words font-semibold text-gray-700">Venue: {booking.address}</span>
                 </div>
 
                 {booking.customRequirement && (
-                    <div className="mt-3 bg-amber-50/60 border border-amber-200 p-2.5 rounded-lg text-xs">
+                    <div className="mt-2.5 bg-amber-50/60 border border-amber-200 p-2.5 rounded-lg text-xs">
                         <strong className="text-amber-900 block font-semibold mb-0.5">Requirement / Note:</strong>
-                        <p className="text-amber-800 italic">{booking.customRequirement}</p>
+                        <p className="text-amber-800 italic break-words">{booking.customRequirement}</p>
                     </div>
                 )}
             </div>
 
             {/* Footer */}
-            <div className="mt-5 pt-3 border-t border-gray-100 flex items-center justify-between">
-                <div>
-                    <span className="text-xs text-gray-400 block font-medium">Service Charge</span>
-                    <span className="text-lg font-extrabold text-gray-900">₹{booking.totalAmount}</span>
+            <div className="mt-4 pt-3 border-t border-gray-100 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                <div className="flex items-center justify-between sm:block">
+                    <span className="text-[11px] sm:text-xs text-gray-400 block font-bold uppercase">Service Charge</span>
+                    <span className="text-lg sm:text-xl font-black text-gray-900">₹{booking.totalAmount}</span>
                 </div>
 
                 <div className="flex items-center gap-2 flex-wrap">
@@ -137,13 +139,13 @@ function UserBookingCard({ booking }) {
                         <>
                             <button
                                 onClick={() => setShowTracking(true)}
-                                className="px-3 py-2 text-xs font-black text-white bg-[#ff4d2d] hover:bg-[#e64323] rounded-xl shadow-md transition duration-150 cursor-pointer flex items-center gap-1.5 min-h-[44px]"
+                                className="flex-1 sm:flex-none px-3 py-2 text-xs font-black text-white bg-[#ff4d2d] hover:bg-[#e64323] rounded-xl shadow-md transition duration-150 cursor-pointer flex items-center justify-center gap-1.5 min-h-[44px]"
                             >
                                 <FaRoute /> TRACK LIVE
                             </button>
                             <button
                                 onClick={handleOpenGoogleMaps}
-                                className="px-3 py-2 text-xs font-black text-blue-600 bg-blue-50 border border-blue-200 hover:bg-blue-100 rounded-xl transition duration-150 cursor-pointer flex items-center gap-1.5 min-h-[44px]"
+                                className="flex-1 sm:flex-none px-3 py-2 text-xs font-black text-blue-600 bg-blue-50 border border-blue-200 hover:bg-blue-100 rounded-xl transition duration-150 cursor-pointer flex items-center justify-center gap-1.5 min-h-[44px]"
                                 title="Open in Google Maps"
                             >
                                 <FaMapMarkedAlt size={14} /> 🗺️ Google Maps
@@ -153,13 +155,13 @@ function UserBookingCard({ booking }) {
 
                     {booking.status === "completed" && (
                         booking.isRated ? (
-                            <span className="bg-amber-100 text-amber-800 border border-amber-300 px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1">
+                            <span className="bg-amber-100 text-amber-800 border border-amber-300 px-3 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1 min-h-[44px] w-full sm:w-auto">
                                 <FaStar className="text-amber-500" /> Reviewed
                             </span>
                         ) : (
                             <button
                                 onClick={() => setShowRatingModal(true)}
-                                className="px-3.5 py-2 text-xs font-black text-amber-950 bg-amber-400 hover:bg-amber-500 rounded-xl shadow-md transition duration-150 cursor-pointer flex items-center gap-1.5 min-h-[44px]"
+                                className="w-full sm:w-auto px-3.5 py-2 text-xs font-black text-amber-950 bg-amber-400 hover:bg-amber-500 rounded-xl shadow-md transition duration-150 cursor-pointer flex items-center justify-center gap-1.5 min-h-[44px]"
                             >
                                 <FaStar /> RATE PANDIT JI
                             </button>
@@ -169,9 +171,9 @@ function UserBookingCard({ booking }) {
                     {booking.status === "pending" && (
                         <button
                             onClick={handleCancelBooking}
-                            className="px-3.5 py-2 text-xs font-bold text-red-600 hover:text-white bg-red-50 hover:bg-red-600 border border-red-200 rounded-xl transition duration-150 cursor-pointer min-h-[44px]"
+                            className="w-full sm:w-auto px-3.5 py-2 text-xs font-bold text-red-600 hover:text-white bg-red-50 hover:bg-red-600 border border-red-200 rounded-xl transition duration-150 cursor-pointer flex items-center justify-center min-h-[44px]"
                         >
-                            Cancel
+                            Cancel Request
                         </button>
                     )}
                 </div>

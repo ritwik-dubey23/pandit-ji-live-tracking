@@ -906,16 +906,49 @@ function PanditDashboard() {
                     {/* TAB: PROFILE */}
                     {activeTab === "profile" && (
                         <div className="bg-white p-6 sm:p-8 rounded-3xl border border-orange-100 shadow-sm space-y-6 max-w-3xl mx-auto">
-                            <div className="flex flex-col items-center text-center border-b border-gray-100 pb-4">
-                                <h3 className="text-xl font-black text-gray-900">Pandit Ji Profile Details</h3>
-                                <p className="text-xs text-gray-500 font-semibold mt-1">Manage your account information & contact details</p>
-                                <div className="flex items-center justify-center gap-3 mt-4">
+                            <div className="flex flex-col items-center text-center border-b border-gray-100 pb-6 space-y-3">
+                                {/* CENTERED PROFILE PHOTO WITH EDIT PHOTO BUTTON */}
+                                <div className="relative group">
+                                    <img
+                                        src={myPanditProfile?.profileImage || "/logo.png"}
+                                        alt={myPanditProfile?.name || "Pandit Ji"}
+                                        className="w-28 h-28 sm:w-32 sm:h-32 rounded-full object-cover border-4 border-[#ff4d2d] shadow-lg aspect-square"
+                                    />
+                                    <label
+                                        className="absolute bottom-0 right-0 bg-[#ff4d2d] hover:bg-[#e64323] text-white p-2.5 rounded-full shadow-md cursor-pointer transition flex items-center justify-center border-2 border-white"
+                                        title="Change Profile Photo"
+                                    >
+                                        {uploadingProfilePhoto ? (
+                                            <ClipLoader size={16} color="#fff" />
+                                        ) : (
+                                            <FaCamera size={16} />
+                                        )}
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            className="hidden"
+                                            onChange={handleProfilePhotoChange}
+                                            disabled={uploadingProfilePhoto}
+                                        />
+                                    </label>
+                                </div>
+
+                                <div>
+                                    <h3 className="text-xl sm:text-2xl font-black text-gray-900">
+                                        {myPanditProfile?.name || "Pandit Ji"}
+                                    </h3>
+                                    <p className="text-xs text-gray-500 font-semibold mt-0.5">
+                                        {myPanditProfile?.city}, {myPanditProfile?.state} • {myPanditProfile?.experienceYears || 5}+ Yrs Experience
+                                    </p>
+                                </div>
+
+                                <div className="flex items-center justify-center gap-3 pt-2">
                                     <button
                                         type="button"
                                         onClick={() => setShowEditProfile(!showEditProfile)}
                                         className="px-6 py-2.5 text-xs font-black text-white bg-[#ff4d2d] hover:bg-[#e64323] shadow-md rounded-xl transition cursor-pointer min-h-[44px] flex items-center gap-2"
                                     >
-                                        <FaUserEdit size={16} /> {showEditProfile ? "Cancel Editing" : "Edit Profile"}
+                                        <FaUserEdit size={16} /> {showEditProfile ? "Cancel Editing" : "Edit Profile Details"}
                                     </button>
                                     <button
                                         type="button"

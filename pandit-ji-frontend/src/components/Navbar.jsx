@@ -346,71 +346,79 @@ function Navbar({ searchQuery = "", setSearchQuery = () => {}, onSearchSubmit = 
 
       {/* ================= NOTIFICATION DROPDOWN PANEL ================= */}
       {showNotifications && (
-        <div className="absolute right-3 sm:right-10 top-16 md:top-20 bg-white shadow-2xl rounded-3xl p-4 w-[92vw] max-w-[380px] z-[99999] border border-orange-100 max-h-[80vh] flex flex-col">
-          {/* Header */}
-          <div className="flex items-center justify-between pb-3 border-b border-gray-100">
-            <div className="flex items-center gap-2">
-              <h3 className="font-black text-gray-900 text-base">Notifications</h3>
-              {unreadCount > 0 && (
-                <span className="bg-[#ff4d2d] text-white text-[10px] font-black px-2 py-0.5 rounded-full">
-                  {unreadCount} new
-                </span>
-              )}
-            </div>
+        <>
+          {/* Backdrop overlay to close when clicking outside */}
+          <div
+            className="fixed inset-0 z-[99998]"
+            onClick={() => setShowNotifications(false)}
+          />
 
-            <div className="flex items-center gap-2">
-              {/* Sound Toggle Button */}
-              <button
-                type="button"
-                onClick={toggleSound}
-                className="p-1.5 text-gray-600 hover:text-[#ff4d2d] transition rounded-lg border border-gray-200 cursor-pointer text-xs flex items-center gap-1"
-                title={soundEnabled ? "Mute Notification Sound" : "Enable Notification Sound"}
-              >
-                {soundEnabled ? <FaVolumeUp className="text-green-600" /> : <FaVolumeMute className="text-gray-400" />}
-              </button>
+          <div className="absolute right-2 sm:right-6 md:right-16 top-[72px] md:top-[82px] bg-white shadow-2xl rounded-3xl p-4 w-[calc(100vw-16px)] sm:w-[380px] max-w-[380px] z-[99999] border border-orange-100 max-h-[80vh] flex flex-col transition-all">
+            {/* Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+              <div className="flex items-center gap-2">
+                <h3 className="font-black text-gray-900 text-base">Notifications</h3>
+                {unreadCount > 0 && (
+                  <span className="bg-[#ff4d2d] text-white text-[10px] font-black px-2 py-0.5 rounded-full">
+                    {unreadCount} new
+                  </span>
+                )}
+              </div>
 
-              {unreadCount > 0 && (
+              <div className="flex items-center gap-2">
+                {/* Sound Toggle Button */}
                 <button
                   type="button"
-                  onClick={handleMarkAllRead}
-                  className="text-[11px] font-bold text-[#ff4d2d] hover:underline cursor-pointer flex items-center gap-1"
+                  onClick={toggleSound}
+                  className="p-1.5 text-gray-600 hover:text-[#ff4d2d] transition rounded-lg border border-gray-200 cursor-pointer text-xs flex items-center gap-1"
+                  title={soundEnabled ? "Mute Notification Sound" : "Enable Notification Sound"}
                 >
-                  <FaCheckDouble size={11} /> Mark all read
+                  {soundEnabled ? <FaVolumeUp className="text-green-600" /> : <FaVolumeMute className="text-gray-400" />}
                 </button>
+
+                {unreadCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleMarkAllRead}
+                    className="text-[11px] font-bold text-[#ff4d2d] hover:underline cursor-pointer flex items-center gap-1"
+                  >
+                    <FaCheckDouble size={11} /> Mark all read
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Notification List */}
+            <div className="flex-1 overflow-y-auto py-2 space-y-2 max-h-[360px] divide-y divide-gray-50">
+              {notifications.length === 0 ? (
+                <div className="text-center py-8 text-gray-400 font-semibold text-xs">
+                  No notifications yet 🕉️
+                </div>
+              ) : (
+                notifications.map((notif) => (
+                  <div
+                    key={notif._id}
+                    onClick={() => handleMarkAsRead(notif._id)}
+                    className={`pt-2.5 pb-2 px-2.5 rounded-2xl cursor-pointer transition ${
+                      !notif.isRead ? "bg-orange-50/80 border border-orange-100" : "hover:bg-gray-50"
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <h4 className="text-xs font-black text-gray-900">{notif.title}</h4>
+                      {!notif.isRead && (
+                        <span className="w-2 h-2 rounded-full bg-[#ff4d2d] shrink-0 mt-1"></span>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-gray-600 font-medium mt-0.5 leading-snug">{notif.message}</p>
+                    <span className="text-[9px] font-semibold text-gray-400 block mt-1">
+                      {new Date(notif.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
+                ))
               )}
             </div>
           </div>
-
-          {/* Notification List */}
-          <div className="flex-1 overflow-y-auto py-2 space-y-2 max-h-[360px] divide-y divide-gray-50">
-            {notifications.length === 0 ? (
-              <div className="text-center py-8 text-gray-400 font-semibold text-xs">
-                No notifications yet 🕉️
-              </div>
-            ) : (
-              notifications.map((notif) => (
-                <div
-                  key={notif._id}
-                  onClick={() => handleMarkAsRead(notif._id)}
-                  className={`pt-2.5 pb-2 px-2.5 rounded-2xl cursor-pointer transition ${
-                    !notif.isRead ? "bg-orange-50/80 border border-orange-100" : "hover:bg-gray-50"
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <h4 className="text-xs font-black text-gray-900">{notif.title}</h4>
-                    {!notif.isRead && (
-                      <span className="w-2 h-2 rounded-full bg-[#ff4d2d] shrink-0 mt-1"></span>
-                    )}
-                  </div>
-                  <p className="text-[11px] text-gray-600 font-medium mt-0.5 leading-snug">{notif.message}</p>
-                  <span className="text-[9px] font-semibold text-gray-400 block mt-1">
-                    {new Date(notif.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </span>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
+        </>
       )}
     </div>
     </>

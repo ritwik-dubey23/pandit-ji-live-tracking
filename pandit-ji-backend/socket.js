@@ -173,6 +173,22 @@ export const initSocket = (server) => {
                     io.to(`user_${recipientId}`).emit("receive_chat_message", messagePayload);
                     io.to(`pandit_${recipientId}`).emit("receive_chat_message", messagePayload);
                 }
+
+                // Broadcast to DB-associated user and pandit rooms to guarantee instant delivery
+                const booking = await Booking.findById(bookingId).populate("pandit");
+                if (booking) {
+                    if (booking.user) {
+                        io.to(`user_${booking.user.toString()}`).emit("receive_chat_message", messagePayload);
+                    }
+                    if (booking.pandit?.user) {
+                        const pUserId = booking.pandit.user.toString();
+                        io.to(`pandit_${pUserId}`).emit("receive_chat_message", messagePayload);
+                        io.to(`user_${pUserId}`).emit("receive_chat_message", messagePayload);
+                    }
+                    if (booking.pandit?._id) {
+                        io.to(`pandit_${booking.pandit._id.toString()}`).emit("receive_chat_message", messagePayload);
+                    }
+                }
             } catch (err) {
                 console.error("Error in send_chat_message:", err.message);
             }

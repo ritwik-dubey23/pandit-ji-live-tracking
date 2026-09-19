@@ -181,6 +181,39 @@ export const playPanditArrivedSound = (id = null) => {
 export const playChatMessageSentSound = () => {
     if (!isSoundEnabled()) return;
     try {
+        const audio = new Audio("/message-notification.wav");
+        audio.volume = 0.6;
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+            playPromise.catch(err => {
+                console.warn("[AUDIO WARN] Sent message sound fallback to synth:", err.message);
+                playSynthMessageSentSound();
+            });
+        }
+    } catch (err) {
+        playSynthMessageSentSound();
+    }
+};
+
+export const playChatMessageReceivedSound = () => {
+    if (!isSoundEnabled()) return;
+    try {
+        const audio = new Audio("/message-notification.wav");
+        audio.volume = 1.0;
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+            playPromise.catch(err => {
+                console.warn("[AUDIO WARN] Received message sound fallback to synth:", err.message);
+                playSynthMessageReceivedSound();
+            });
+        }
+    } catch (err) {
+        playSynthMessageReceivedSound();
+    }
+};
+
+const playSynthMessageSentSound = () => {
+    try {
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
         if (!AudioCtx) return;
         const ctx = new AudioCtx();
@@ -197,12 +230,11 @@ export const playChatMessageSentSound = () => {
         osc.start(now);
         osc.stop(now + 0.1);
     } catch (err) {
-        console.warn("Chat sent sound error:", err);
+        console.warn("Synth sent sound error:", err);
     }
 };
 
-export const playChatMessageReceivedSound = () => {
-    if (!isSoundEnabled()) return;
+const playSynthMessageReceivedSound = () => {
     try {
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
         if (!AudioCtx) return;
@@ -220,7 +252,7 @@ export const playChatMessageReceivedSound = () => {
         osc.start(now);
         osc.stop(now + 0.15);
     } catch (err) {
-        console.warn("Chat received sound error:", err);
+        console.warn("Synth received sound error:", err);
     }
 };
 
