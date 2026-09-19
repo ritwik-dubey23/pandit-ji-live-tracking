@@ -1,5 +1,3 @@
-import axios from "axios";
-
 export const sendWhatsAppBookingAlert = async (booking) => {
     try {
         const panditPhone = booking.pandit?.mobile || booking.userMobile;
@@ -25,18 +23,26 @@ export const sendWhatsAppBookingAlert = async (booking) => {
             params.append("Body", textMessage);
 
             const authHeader = "Basic " + Buffer.from(`${sid}:${authToken}`).toString("base64");
-            await axios.post(url, params, {
+            const response = await fetch(url, {
+                method: "POST",
                 headers: {
                     "Authorization": authHeader,
                     "Content-Type": "application/x-www-form-urlencoded"
-                }
+                },
+                body: params.toString()
             });
-            console.log(`[WHATSAPP SUCCESS] WhatsApp alert sent to ${formattedPhone}`);
+
+            if (response.ok) {
+                console.log(`[WHATSAPP SUCCESS] WhatsApp alert sent to ${formattedPhone}`);
+            } else {
+                const errData = await response.text();
+                console.error("[WHATSAPP ERROR] Twilio response error:", errData);
+            }
         } else {
             console.log(`[DEV WHATSAPP ALERT] To ${panditPhone || "Pandit Ji"}:\n${textMessage}`);
         }
     } catch (err) {
-        console.error("[WHATSAPP ERROR] Failed to send WhatsApp alert:", err?.response?.data || err.message);
+        console.error("[WHATSAPP ERROR] Failed to send WhatsApp alert:", err.message);
     }
 };
 
@@ -58,17 +64,25 @@ export const sendSMSBookingAlert = async (booking) => {
             params.append("Body", smsText);
 
             const authHeader = "Basic " + Buffer.from(`${sid}:${authToken}`).toString("base64");
-            await axios.post(url, params, {
+            const response = await fetch(url, {
+                method: "POST",
                 headers: {
                     "Authorization": authHeader,
                     "Content-Type": "application/x-www-form-urlencoded"
-                }
+                },
+                body: params.toString()
             });
-            console.log(`[SMS SUCCESS] SMS alert sent to ${formattedPhone}`);
+
+            if (response.ok) {
+                console.log(`[SMS SUCCESS] SMS alert sent to ${formattedPhone}`);
+            } else {
+                const errData = await response.text();
+                console.error("[SMS ERROR] Twilio response error:", errData);
+            }
         } else {
             console.log(`[DEV SMS ALERT] To ${panditPhone || "Pandit Ji"}:\n${smsText}`);
         }
     } catch (err) {
-        console.error("[SMS ERROR] Failed to send SMS alert:", err?.response?.data || err.message);
+        console.error("[SMS ERROR] Failed to send SMS alert:", err.message);
     }
 };
