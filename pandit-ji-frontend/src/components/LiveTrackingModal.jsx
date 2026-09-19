@@ -15,6 +15,15 @@ function LiveTrackingModal({ booking, currentUserRole, onClose, onStatusUpdated 
     const polylineRef = useRef(null);
     const watchIdRef = useRef(null);
 
+    const trackingSteps = [
+        { id: "accepted", label: "Accepted" },
+        { id: "on_the_way", label: "On The Way" },
+        { id: "arriving", label: "Arriving Soon" },
+        { id: "reached", label: "Reached" },
+        { id: "started", label: "Puja Started" },
+        { id: "completed", label: "Completed" }
+    ];
+
     // Initial coordinates from booking or Indore fallback
     const [userLoc, setUserLoc] = useState({
         lat: booking.userLocation?.latitude || INDORE_FALLBACK.lat,
@@ -289,7 +298,7 @@ function LiveTrackingModal({ booking, currentUserRole, onClose, onStatusUpdated 
 
                 {/* 2. BOTTOM BOTTOM-SHEET / CARD (180154.jpg SCREEN 3 LAYOUT) */}
                 <div className="flex-1 bg-white p-5 flex flex-col justify-between overflow-y-auto">
-                    {/* PANDIT PROFILE & STATUS */}
+                    {/* PANDIT PROFILE & DYNAMIC STATUS */}
                     <div className="flex items-center justify-between border-b border-gray-100 pb-4">
                         <div className="flex items-center gap-3.5">
                             <img
@@ -304,7 +313,7 @@ function LiveTrackingModal({ booking, currentUserRole, onClose, onStatusUpdated 
                                         <FaStar size={12} className="text-amber-500" /> {panditRating} ({panditReviews})
                                     </span>
                                     <span className="text-[11px] font-black text-green-700 bg-green-50 px-2 py-0.5 rounded-md border border-green-200 uppercase">
-                                        ● On the way
+                                        ● {bookingStatus.replace(/_/g, ' ')}
                                     </span>
                                 </div>
                             </div>
@@ -368,7 +377,7 @@ function LiveTrackingModal({ booking, currentUserRole, onClose, onStatusUpdated 
                             </form>
                         </div>
                     ) : (
-                        /* 5-STEP PROGRESS TIMELINE TRACKER (180154.jpg SCREEN 3) */
+                        /* DYNAMIC 6-STEP PROGRESS TIMELINE TRACKER */
                         <div className="my-4 pt-2">
                             <div className="relative flex items-center justify-between px-2">
                                 {/* Connecting Line */}
@@ -376,56 +385,33 @@ function LiveTrackingModal({ booking, currentUserRole, onClose, onStatusUpdated 
                                     <div
                                         className="h-full bg-[#ff4d2d] transition-all duration-500"
                                         style={{
-                                            width: bookingStatus === 'completed' ? '100%' :
-                                                   bookingStatus === 'accepted' ? '50%' : '25%'
+                                            width: `${Math.max(0, (trackingSteps.findIndex(s => s.id === bookingStatus) / (trackingSteps.length - 1)) * 100)}%`
                                         }}
                                     ></div>
                                 </div>
 
-                                {/* STEP 1 */}
-                                <div className="relative z-10 flex flex-col items-center">
-                                    <div className="w-6 h-6 rounded-full bg-[#ff4d2d] text-white flex items-center justify-center text-[10px] font-bold shadow-md">
-                                        ✓
-                                    </div>
-                                    <span className="text-[10px] font-extrabold text-gray-800 mt-1.5 text-center">Booking Confirmed</span>
-                                    <span className="text-[9px] font-semibold text-gray-400">10:00 AM</span>
-                                </div>
+                                {trackingSteps.map((step, idx) => {
+                                    const currentIdx = trackingSteps.findIndex(s => s.id === bookingStatus);
+                                    const isCompletedStep = currentIdx > idx;
+                                    const isCurrentStep = currentIdx === idx;
 
-                                {/* STEP 2 */}
-                                <div className="relative z-10 flex flex-col items-center">
-                                    <div className="w-6 h-6 rounded-full bg-[#ff4d2d] text-white flex items-center justify-center text-[10px] font-bold shadow-md">
-                                        ✓
-                                    </div>
-                                    <span className="text-[10px] font-extrabold text-gray-800 mt-1.5 text-center">Pandit Assigned</span>
-                                    <span className="text-[9px] font-semibold text-gray-400">10:02 AM</span>
-                                </div>
-
-                                {/* STEP 3 */}
-                                <div className="relative z-10 flex flex-col items-center">
-                                    <div className="w-6 h-6 rounded-full bg-[#ff4d2d] text-white flex items-center justify-center text-[10px] font-bold shadow-md animate-bounce">
-                                        ●
-                                    </div>
-                                    <span className="text-[10px] font-extrabold text-[#ff4d2d] mt-1.5 text-center">On the way</span>
-                                    <span className="text-[9px] font-semibold text-gray-400">10:05 AM</span>
-                                </div>
-
-                                {/* STEP 4 */}
-                                <div className="relative z-10 flex flex-col items-center">
-                                    <div className="w-6 h-6 rounded-full bg-gray-200 text-gray-400 flex items-center justify-center text-[10px] font-bold">
-                                        4
-                                    </div>
-                                    <span className="text-[10px] font-bold text-gray-400 mt-1.5 text-center">Arriving Soon</span>
-                                    <span className="text-[9px] font-medium text-gray-400">--</span>
-                                </div>
-
-                                {/* STEP 5 */}
-                                <div className="relative z-10 flex flex-col items-center">
-                                    <div className="w-6 h-6 rounded-full bg-gray-200 text-gray-400 flex items-center justify-center text-[10px] font-bold">
-                                        5
-                                    </div>
-                                    <span className="text-[10px] font-bold text-gray-400 mt-1.5 text-center">Reached</span>
-                                    <span className="text-[9px] font-medium text-gray-400">--</span>
-                                </div>
+                                    return (
+                                        <div key={step.id} className="relative z-10 flex flex-col items-center">
+                                            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black transition ${
+                                                isCompletedStep ? "bg-green-600 text-white shadow-xs" :
+                                                isCurrentStep ? "bg-[#ff4d2d] text-white shadow-md animate-bounce ring-2 ring-orange-300" :
+                                                "bg-gray-200 text-gray-500"
+                                            }`}>
+                                                {isCompletedStep ? "✓" : isCurrentStep ? "●" : idx + 1}
+                                            </div>
+                                            <span className={`text-[10px] font-extrabold mt-1.5 text-center ${
+                                                isCurrentStep ? "text-[#ff4d2d]" : isCompletedStep ? "text-gray-900" : "text-gray-400"
+                                            }`}>
+                                                {step.label}
+                                            </span>
+                                        </div>
+                                    );
+                                })}
                             </div>
                         </div>
                     )}
