@@ -16,6 +16,7 @@ function Home() {
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategory, setSelectedCategory] = useState("All Poojas");
     const [selectedPanditForBooking, setSelectedPanditForBooking] = useState(null);
+    const [selectedServiceForBooking, setSelectedServiceForBooking] = useState(null);
 
     const { location, loading: locLoading, detectLocation } = useCurrentLocation();
     useGetAllPandits(searchQuery, selectedCategory);
@@ -81,15 +82,8 @@ function Home() {
                         return sNameNorm.includes(normQuery) || s.name.toLowerCase().includes(qLower) || (s.description && s.description.toLowerCase().includes(qLower));
                     });
 
-                    // Filter Pandits available for matching service or matching Pandit name/specialization
-                    const matchingPandits = panditsList.filter(p => {
-                        const pNameMatch = p.name.toLowerCase().includes(qLower) || (p.description && p.description.toLowerCase().includes(qLower)) || (p.city && p.city.toLowerCase().includes(qLower));
-                        const serviceMatch = p.services && p.services.some(s => {
-                            const sNameNorm = normalizeKeyword(s.name);
-                            return sNameNorm.includes(normQuery) || s.name.toLowerCase().includes(qLower);
-                        });
-                        return pNameMatch || serviceMatch;
-                    });
+                    // Pandits matching search query or matching services (if panditsList has API search result, keep them all)
+                    const matchingPandits = panditsList.length > 0 ? panditsList : [];
 
                     const hasResults = matchingServices.length > 0 || matchingPandits.length > 0;
 
@@ -145,7 +139,10 @@ function Home() {
                                                     <ServiceCard
                                                         key={service._id || idx}
                                                         service={service}
-                                                        onBookService={() => setSelectedPanditForBooking(service.samplePandit || panditsList[0])}
+                                                        onBookService={() => {
+                                                            setSelectedPanditForBooking(service.samplePandit || panditsList[0]);
+                                                            setSelectedServiceForBooking(service);
+                                                        }}
                                                     />
                                                 ))}
                                             </div>
@@ -171,7 +168,11 @@ function Home() {
                                                     <PanditCard
                                                         key={pandit._id}
                                                         pandit={pandit}
-                                                        onBookNow={(p) => setSelectedPanditForBooking(p)}
+                                                        searchQuery={searchQuery}
+                                                        onBookNow={(p, s) => {
+                                                            setSelectedPanditForBooking(p);
+                                                            setSelectedServiceForBooking(s || null);
+                                                        }}
                                                     />
                                                 ))}
                                             </div>
@@ -291,7 +292,11 @@ function Home() {
                                         <PanditCard
                                             key={pandit._id}
                                             pandit={pandit}
-                                            onBookNow={(p) => setSelectedPanditForBooking(p)}
+                                            searchQuery={selectedCategory !== "All Poojas" ? selectedCategory : ""}
+                                            onBookNow={(p, s) => {
+                                                setSelectedPanditForBooking(p);
+                                                setSelectedServiceForBooking(s || null);
+                                            }}
                                         />
                                     ))}
                                 </div>
@@ -353,7 +358,11 @@ function Home() {
             {selectedPanditForBooking && (
                 <BookingModal
                     pandit={selectedPanditForBooking}
-                    onClose={() => setSelectedPanditForBooking(null)}
+                    initialService={selectedServiceForBooking}
+                    onClose={() => {
+                        setSelectedPanditForBooking(null);
+                        setSelectedServiceForBooking(null);
+                    }}
                 />
             )}
 

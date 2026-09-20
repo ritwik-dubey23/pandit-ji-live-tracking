@@ -2,9 +2,42 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaStar, FaRegStar, FaMapMarkerAlt, FaBriefcase, FaPrayingHands } from 'react-icons/fa';
 
-function PanditCard({ pandit, onBookNow }) {
+function PanditCard({ pandit, onBookNow, searchQuery }) {
     const primaryColor = "#ff4d2d";
     const navigate = useNavigate();
+
+    // Identify matched service if search query or category is active
+    let matchedService = null;
+    if (searchQuery && searchQuery.trim() && pandit?.services?.length > 0) {
+        const qRaw = searchQuery.trim().toLowerCase();
+        const qWords = qRaw.split(/\s+/).filter(w => w.length > 1);
+
+        // 1. Exact or partial match on service name
+        matchedService = pandit.services.find(s => s.name?.toLowerCase().includes(qRaw));
+
+        // 2. Transliteration / alternate term keyword match
+        if (!matchedService) {
+            let altQuery = "";
+            if (qRaw.includes("grih") || qRaw.includes("pravesh") || qRaw.includes("house")) altQuery = "griha";
+            else if (qRaw.includes("satya") || qRaw.includes("narayan")) altQuery = "satyanarayan";
+            else if (qRaw.includes("vivah") || qRaw.includes("shadi") || qRaw.includes("marriage")) altQuery = "marriage";
+            else if (qRaw.includes("kundli") || qRaw.includes("astrology")) altQuery = "kundli";
+            
+            if (altQuery) {
+                matchedService = pandit.services.find(s => s.name?.toLowerCase().includes(altQuery));
+            }
+        }
+
+        // 3. Word match on service name
+        if (!matchedService) {
+            matchedService = pandit.services.find(s => s.name && qWords.some(w => s.name.toLowerCase().includes(w)));
+        }
+
+        // 4. Match on service description
+        if (!matchedService) {
+            matchedService = pandit.services.find(s => s.description && (s.description.toLowerCase().includes(qRaw) || qWords.some(w => s.description.toLowerCase().includes(w))));
+        }
+    }
 
     const startingPrice = pandit.services && pandit.services.length > 0
         ? Math.min(...pandit.services.map(s => s.price))
@@ -68,9 +101,37 @@ function PanditCard({ pandit, onBookNow }) {
                     </span>
                 </div>
 
-                <p className="text-xs text-gray-600 mt-2 line-clamp-2 leading-relaxed">
-                    {pandit.description || "Experienced Acharya specializing in authentic rituals and Poojas."}
-                </p>
+                {/* MATCHED SERVICE HIGHLIGHT BOX */}
+                {matchedService ? (
+                    <div className="mt-2.5 p-2.5 bg-orange-50/90 border border-orange-200 rounded-xl space-y-1 text-left shadow-2xs">
+                        <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-black uppercase tracking-wider text-[#ff4d2d] bg-orange-100 px-2 py-0.5 rounded-md">
+                                Matched Service
+                            </span>
+                            {matchedService.duration && (
+                                <span className="text-[10px] font-bold text-gray-600">
+                                    ⏱️ {matchedService.duration}
+                                </span>
+                            )}
+                        </div>
+                        <h4 className="font-extrabold text-xs text-gray-900 line-clamp-1 mt-1">
+                            {matchedService.name}
+                        </h4>
+                        {matchedService.description && (
+                            <p className="text-[11px] text-gray-600 line-clamp-2 leading-tight">
+                                {matchedService.description}
+                            </p>
+                        )}
+                        <div className="flex items-center justify-between pt-1 border-t border-orange-200/60 mt-1">
+                            <span className="text-[11px] font-semibold text-gray-700">Pooja Fee:</span>
+                            <span className="text-xs font-black text-[#ff4d2d]">₹{matchedService.price}</span>
+                        </div>
+                    </div>
+                ) : (
+                    <p className="text-xs text-gray-600 mt-2 line-clamp-2 leading-relaxed">
+                        {pandit.description || "Experienced Acharya specializing in authentic rituals and Poojas."}
+                    </p>
+                )}
 
                 {/* Rating stars */}
                 <div className='flex items-center justify-between mt-3 pt-2 border-t border-gray-100'>
@@ -86,8 +147,12 @@ function PanditCard({ pandit, onBookNow }) {
             {/* Footer */}
             <div className='flex items-center justify-between px-4 pt-2 pb-4 border-t border-gray-100 mt-auto'>
                 <div>
-                    <span className="text-[10px] text-gray-400 font-medium block">Starting at</span>
-                    <span className='font-bold text-gray-900 text-lg'>₹{startingPrice}</span>
+                    <span className="text-[10px] text-gray-400 font-medium block">
+                        {matchedService ? "Service Price" : "Starting at"}
+                    </span>
+                    <span className='font-bold text-gray-900 text-lg'>
+                        ₹{matchedService ? matchedService.price : startingPrice}
+                    </span>
                 </div>
 
                 <div className="flex items-center gap-1.5">
@@ -105,11 +170,11 @@ function PanditCard({ pandit, onBookNow }) {
                         type="button"
                         onClick={(e) => {
                             e.stopPropagation();
-                            onBookNow(pandit);
+                            onBookNow(pandit, matchedService);
                         }}
                         className="px-3.5 py-1.5 text-xs font-bold text-white bg-[#ff4d2d] hover:bg-[#e64323] rounded-lg shadow-xs cursor-pointer transition"
                     >
-                        Book Now
+                        {matchedService ? "Book Service" : "Book Now"}
                     </button>
                 </div>
             </div>

@@ -19,6 +19,13 @@ function UserBookingCard({ booking }) {
     const [submittingRating, setSubmittingRating] = useState(false);
     const [ratingErr, setRatingErr] = useState("");
 
+    const handleOpenRatingModal = () => {
+        setSelectedRating(booking.review?.rating || 5);
+        setReviewComment(booking.review?.comment || "");
+        setRatingErr("");
+        setShowRatingModal(true);
+    };
+
     const handleOpenGoogleMaps = () => {
         const panditLat = booking.panditLocation?.latitude;
         const panditLng = booking.panditLocation?.longitude;
@@ -58,18 +65,26 @@ function UserBookingCard({ booking }) {
         setSubmittingRating(true);
 
         try {
+            const savedToken = localStorage.getItem("pandit_ji_token");
+            const headers = savedToken ? { Authorization: `Bearer ${savedToken}` } : {};
+
             const res = await axios.post(`${serverUrl}/api/booking/${booking._id}/rate`, {
                 rating: selectedRating,
                 comment: reviewComment
-            }, { withCredentials: true });
+            }, {
+                withCredentials: true,
+                headers
+            });
 
             dispatch(updateBookingStatusInState(res.data.booking));
             setSubmittingRating(false);
             setShowRatingModal(false);
-            alert("Thank you! Your rating and review have been submitted successfully. 🙏");
+            alert(res.data.message || "Thank you! Your rating and review have been submitted successfully. 🙏");
         } catch (error) {
             setSubmittingRating(false);
-            setRatingErr(error?.response?.data?.message || "Failed to submit review.");
+            console.error("Review submit error:", error);
+            const errMsg = error?.response?.data?.message || error?.message || "Failed to submit review. Please check connection and login state.";
+            setRatingErr(errMsg);
         }
     };
 
@@ -155,12 +170,22 @@ function UserBookingCard({ booking }) {
 
                     {booking.status === "completed" && (
                         booking.isRated ? (
-                            <span className="bg-amber-100 text-amber-800 border border-amber-300 px-3 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1 min-h-[44px] w-full sm:w-auto">
-                                <FaStar className="text-amber-500" /> Reviewed
-                            </span>
+                            <div className="flex items-center gap-2 w-full sm:w-auto">
+                                <span className="bg-amber-100 text-amber-900 border border-amber-300 px-3 py-2 rounded-xl text-xs font-black flex items-center justify-center gap-1 min-h-[44px]">
+                                    <FaStar className="text-amber-500" /> Rated {booking.review?.rating || 5}/5 ⭐
+                                </span>
+                                <button
+                                    type="button"
+                                    onClick={handleOpenRatingModal}
+                                    className="px-3.5 py-2 text-xs font-black text-amber-950 bg-amber-300 hover:bg-amber-400 border border-amber-400 rounded-xl shadow-xs transition duration-150 cursor-pointer flex items-center justify-center gap-1.5 min-h-[44px]"
+                                >
+                                    ✏️ Edit Review
+                                </button>
+                            </div>
                         ) : (
                             <button
-                                onClick={() => setShowRatingModal(true)}
+                                type="button"
+                                onClick={handleOpenRatingModal}
                                 className="w-full sm:w-auto px-3.5 py-2 text-xs font-black text-amber-950 bg-amber-400 hover:bg-amber-500 rounded-xl shadow-md transition duration-150 cursor-pointer flex items-center justify-center gap-1.5 min-h-[44px]"
                             >
                                 <FaStar /> RATE PANDIT JI
@@ -195,7 +220,9 @@ function UserBookingCard({ booking }) {
                     <div className="bg-white rounded-3xl p-6 max-w-md w-full border border-orange-200 shadow-2xl space-y-4 relative">
                         <div className="flex justify-between items-center border-b border-gray-100 pb-3">
                             <div>
-                                <h3 className="text-lg font-black text-gray-900">Rate Pandit Ji</h3>
+                                <h3 className="text-lg font-black text-gray-900">
+                                    {booking.isRated ? "Edit Your Review ✏️" : "Rate Pandit Ji ⭐"}
+                                </h3>
                                 <p className="text-xs text-gray-500 mt-0.5">Share your feedback for {booking.serviceName}</p>
                             </div>
                             <button
@@ -269,7 +296,7 @@ function UserBookingCard({ booking }) {
                                     disabled={submittingRating}
                                     className="w-1/2 py-3 bg-[#ff4d2d] hover:bg-[#e64323] text-white text-xs font-black rounded-xl shadow-md min-h-[44px] cursor-pointer flex items-center justify-center"
                                 >
-                                    {submittingRating ? <ClipLoader size={16} color="#fff" /> : "Submit Review"}
+                                    {submittingRating ? <ClipLoader size={16} color="#fff" /> : (booking.isRated ? "Update Review" : "Submit Review")}
                                 </button>
                             </div>
                         </form>

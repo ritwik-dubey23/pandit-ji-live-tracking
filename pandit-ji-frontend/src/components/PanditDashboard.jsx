@@ -81,6 +81,48 @@ function PanditDashboard() {
         }
     };
 
+    const handlePanditDismissNotification = async (e, notifId) => {
+        e.stopPropagation();
+        setNotifications(prev => prev.filter(n => (n._id || n.id) !== notifId));
+        try {
+            const token = localStorage.getItem("pandit_ji_token");
+            const headers = token ? { Authorization: `Bearer ${token}` } : {};
+            await axios.delete(`${serverUrl}/api/notifications/${notifId}`, { headers, withCredentials: true });
+        } catch (err) {
+            console.error("Failed to delete notification from DB:", err.message);
+        }
+    };
+
+    const handlePanditNotificationClick = async (notif) => {
+        const notifId = notif._id || notif.id;
+        if (!notif.isRead && notifId) {
+            try {
+                const token = localStorage.getItem("pandit_ji_token");
+                const headers = token ? { Authorization: `Bearer ${token}` } : {};
+                await axios.put(`${serverUrl}/api/notifications/${notifId}/read`, {}, { headers, withCredentials: true });
+                setNotifications(prev => prev.map(n => (n._id || n.id) === notifId ? { ...n, isRead: true } : n));
+            } catch (err) {
+                console.error("Error marking notification read:", err.message);
+            }
+        }
+        setShowNotificationsDropdown(false);
+
+        const targetBookingId = notif.bookingId || notif.data?.bookingId;
+        if (targetBookingId && panditBookings && panditBookings.length > 0) {
+            const found = panditBookings.find(b => b._id === targetBookingId);
+            if (found) {
+                setSelectedBookingForTracking(found);
+                return;
+            }
+        }
+
+        if (notif.type === "booking_request") {
+            setActiveTab("requests");
+        } else {
+            setActiveTab("active");
+        }
+    };
+
     const unreadCount = notifications.filter(n => !n.isRead).length;
 
     // Profile state
@@ -435,17 +477,40 @@ function PanditDashboard() {
                                             notifications.map((n) => (
                                                 <div
                                                     key={n._id || n.id}
-                                                    className={`p-3 rounded-2xl text-xs transition space-y-1 ${
-                                                        !n.isRead ? "bg-orange-50/70 border-l-4 border-[#ff4d2d]" : "bg-white text-gray-600"
+                                                    onClick={() => handlePanditNotificationClick(n)}
+                                                    className={`p-3 rounded-2xl text-xs transition space-y-1 cursor-pointer group border ${
+                                                        !n.isRead ? "bg-orange-50/90 border-orange-200 shadow-xs" : "bg-white border-gray-100 hover:bg-gray-50 text-gray-600"
                                                     }`}
                                                 >
-                                                    <div className="flex items-center justify-between font-bold text-gray-900">
-                                                        <span>{n.title || "Booking Alert"}</span>
-                                                        <span className="text-[10px] text-gray-400 font-normal">
+                                                    <div className="flex items-start justify-between gap-2">
+                                                        <div className="flex items-center gap-1.5 min-w-0">
+                                                            {!n.isRead && (
+                                                                <span className="w-2 h-2 rounded-full bg-[#ff4d2d] shrink-0 animate-pulse"></span>
+                                                            )}
+                                                            <span className="font-extrabold text-gray-900 truncate">{n.title || "Booking Alert"}</span>
+                                                        </div>
+
+                                                        {/* ✕ DISMISS BUTTON */}
+                                                        <button
+                                                            type="button"
+                                                            onClick={(e) => handlePanditDismissNotification(e, n._id || n.id)}
+                                                            className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg cursor-pointer transition shrink-0 ml-1"
+                                                            title="Dismiss notification"
+                                                        >
+                                                            <FaTimes size={14} />
+                                                        </button>
+                                                    </div>
+
+                                                    <p className="text-gray-700 leading-snug break-words">{n.message || n.text}</p>
+                                                    
+                                                    <div className="flex items-center justify-between pt-1 border-t border-gray-100/60">
+                                                        <span className="text-[9px] text-gray-400 font-semibold">
                                                             {n.createdAt ? new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Just now"}
                                                         </span>
+                                                        <span className="text-[9px] font-black text-[#ff4d2d] group-hover:underline">
+                                                            Tap to view →
+                                                        </span>
                                                     </div>
-                                                    <p className="text-gray-700 leading-snug">{n.message || n.text}</p>
                                                 </div>
                                             ))
                                         )}

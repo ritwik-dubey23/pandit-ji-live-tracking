@@ -15,11 +15,52 @@ export const getAllPandits = async (req, res) => {
         }
 
         if (search && search.trim()) {
-            query.$or = [
-                { name: { $regex: search.trim(), $options: "i" } },
-                { description: { $regex: search.trim(), $options: "i" } },
-                { "services.name": { $regex: search.trim(), $options: "i" } }
+            const rawSearch = search.trim();
+            const words = rawSearch.split(/\s+/).filter(Boolean);
+            const searchRegex = new RegExp(rawSearch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), "i");
+
+            // Build regex conditions for exact phrase AND individual terms
+            const orConditions = [
+                { name: searchRegex },
+                { description: searchRegex },
+                { city: searchRegex },
+                { "services.name": searchRegex },
+                { "services.description": searchRegex }
             ];
+
+            // Common variations/transliteration mapping
+            const qLower = rawSearch.toLowerCase();
+            if (qLower.includes("grih") || qLower.includes("pravesh") || qLower.includes("house")) {
+                orConditions.push({ "services.name": { $regex: "griha", $options: "i" } });
+                orConditions.push({ "services.name": { $regex: "pravesh", $options: "i" } });
+            }
+            if (qLower.includes("satya") || qLower.includes("narayan")) {
+                orConditions.push({ "services.name": { $regex: "satyanarayan", $options: "i" } });
+            }
+            if (qLower.includes("vivah") || qLower.includes("shadi") || qLower.includes("marriage")) {
+                orConditions.push({ "services.name": { $regex: "marriage", $options: "i" } });
+                orConditions.push({ "services.name": { $regex: "vivah", $options: "i" } });
+            }
+            if (qLower.includes("kundli") || qLower.includes("astrology") || qLower.includes("astro")) {
+                orConditions.push({ "services.name": { $regex: "kundli", $options: "i" } });
+                orConditions.push({ "services.name": { $regex: "astrology", $options: "i" } });
+            }
+
+            words.forEach(word => {
+                if (word.length > 1) {
+                    const safeWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    const wordRegex = new RegExp(safeWord, "i");
+                    orConditions.push(
+                        { name: wordRegex },
+                        { description: wordRegex },
+                        { city: wordRegex },
+                        { "services.name": wordRegex },
+                        { "services.description": wordRegex }
+                    );
+                }
+            });
+
+            query.$or = orConditions;
         }
 
         const pandits = await Pandit.find(query).populate("user", "fullName email mobile role");

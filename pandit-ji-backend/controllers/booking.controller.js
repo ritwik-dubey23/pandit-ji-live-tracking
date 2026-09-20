@@ -298,54 +298,99 @@ export const submitBookingReview = async (req, res) => {
             return res.status(404).json({ message: "Booking not found." });
         }
 
-        if (booking.user._id.toString() !== req.userId) {
+        // Safely check authorization
+        const bookingUserId = booking.user?._id
+            ? booking.user._id.toString()
+            : (booking.user ? booking.user.toString() : "");
+
+        const currentUserId = req.userId ? req.userId.toString() : "";
+
+        if (bookingUserId && currentUserId && bookingUserId !== currentUserId) {
             return res.status(403).json({ message: "You are not authorized to rate this booking." });
         }
 
-        if (booking.status !== "completed") {
-            return res.status(400).json({ message: "You can only rate a ceremony after it is completed." });
+        // Allow rating if status is completed OR if user is editing an existing review
+        if (booking.status !== "completed" && !booking.isRated) {
+            return res.status(400).json({ message: "You can rate the ceremony once it is completed by Pandit Ji." });
         }
 
-        if (booking.isRated) {
-            return res.status(400).json({ message: "You have already submitted a review for this booking." });
+        let panditId = booking.pandit?._id ? booking.pandit._id : booking.pandit;
+        if (!panditId) {
+            const fallbackPandit = await Pandit.findOne({});
+            if (fallbackPandit) panditId = fallbackPandit._id;
         }
 
-        // Create Review Document
-        const review = await Review.create({
-            booking: booking._id,
-            user: req.userId,
-            pandit: booking.pandit._id,
-            rating: numericRating,
-            comment: comment ? comment.trim() : "",
-            userName: booking.userName || booking.user.fullName || "Verified Devotee",
-            serviceName: booking.serviceName
-        });
+        if (!panditId) {
+            return res.status(400).json({ message: "Associated Pandit Ji profile not found." });
+        }
 
-        // Mark Booking as rated
+        let review;
+        let isEdit = false;
+        let existingReview = await Review.findOne({ booking: booking._id });
+
+        if (!existingReview && booking.review) {
+            existingReview = await Review.findById(booking.review);
+        }
+
+        if (existingReview) {
+            isEdit = true;
+            existingReview.rating = numericRating;
+            existingReview.comment = comment !== undefined ? comment.trim() : existingReview.comment;
+            existingReview.userName = booking.userName || booking.user?.fullName || existingReview.userName;
+            existingReview.serviceName = booking.serviceName || existingReview.serviceName;
+            await existingReview.save();
+            review = existingReview;
+        } else {
+            review = await Review.create({
+                booking: booking._id,
+                user: currentUserId,
+                pandit: panditId,
+                rating: numericRating,
+                comment: comment ? comment.trim() : "",
+                userName: booking.userName || booking.user?.fullName || "Verified Devotee",
+                serviceName: booking.serviceName || "Pooja Ceremony"
+            });
+        }
+
+        // Mark Booking as rated and attach review object
         booking.isRated = true;
         booking.review = review._id;
         await booking.save();
 
-        // Recalculate Pandit's rating average and count
-        const allReviews = await Review.find({ pandit: booking.pandit._id });
-        const totalRating = allReviews.reduce((sum, r) => sum + r.rating, 0);
-        const count = allReviews.length;
-        const average = Number((totalRating / count).toFixed(1));
+        // Populate updated booking for response
+        const updatedBooking = await Booking.findById(booking._id)
+            .populate("pandit")
+            .populate("user", "fullName email mobile")
+            .populate("review");
 
-        const pandit = await Pandit.findById(booking.pandit._id);
-        if (pandit) {
-            pandit.rating = { average, count };
-            await pandit.save();
+        // Recalculate Pandit's rating average and count
+        try {
+            const allReviews = await Review.find({ pandit: panditId });
+            if (allReviews.length > 0) {
+                const totalRating = allReviews.reduce((sum, r) => sum + r.rating, 0);
+                const count = allReviews.length;
+                const average = Number((totalRating / count).toFixed(1));
+
+                const panditObj = await Pandit.findById(panditId);
+                if (panditObj) {
+                    panditObj.rating = { average, count };
+                    await panditObj.save();
+                }
+            }
+        } catch (calcErr) {
+            console.error("Rating recalculation error:", calcErr.message);
         }
 
         return res.status(200).json({
-            message: "Thank you for your rating & review! 🙏",
+            message: isEdit
+                ? "Your review has been updated successfully! 🙏"
+                : "Thank you for your rating & review! 🙏",
             review,
-            booking
+            booking: updatedBooking
         });
     } catch (error) {
         console.error("submitBookingReview error:", error);
-        return res.status(500).json({ message: "Error submitting review." });
+        return res.status(500).json({ message: error.message || "Error submitting review." });
     }
 };
 
