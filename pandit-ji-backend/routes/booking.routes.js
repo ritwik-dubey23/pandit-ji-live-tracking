@@ -33,8 +33,9 @@ bookingRouter.put("/:id/status", isAuth, updateBookingStatus);
 bookingRouter.post("/:id/confirm-arrival", isAuth, confirmUserArrival);
 bookingRouter.put("/:id/confirm-arrival", isAuth, confirmUserArrival);
 
-// Rating & Review route
-bookingRouter.post("/:id/rate", isAuth, submitBookingReview);
-bookingRouter.put("/:id/rate", isAuth, submitBookingReview);
+import { getBookingMessages, sendBookingMessage } from "../controllers/message.controller.js";
+
+bookingRouter.get("/:bookingId/messages", isAuth, getBookingMessages);
+bookingRouter.post("/:bookingId/messages", isAuth, sendBookingMessage);
 
 export default bookingRouter;

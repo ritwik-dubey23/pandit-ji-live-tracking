@@ -14,7 +14,7 @@ import {
     FaCamera, FaImages, FaCloudUploadAlt, FaTimes
 } from 'react-icons/fa';
 import { ClipLoader } from 'react-spinners';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const serverUrl = import.meta.env.VITE_SERVER_URL || "http://localhost:8000";
 
@@ -22,6 +22,7 @@ function PanditDashboard() {
     const primaryColor = "#ff4d2d";
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    const locationState = useLocation();
     useGetPanditBookings();
 
     const { myPanditProfile, panditBookings } = useSelector(state => state.pandit);
@@ -31,6 +32,17 @@ function PanditDashboard() {
     const [isOnline, setIsOnline] = useState(myPanditProfile?.isOnline !== false);
     const [togglingOnline, setTogglingOnline] = useState(false);
     const [selectedBookingForTracking, setSelectedBookingForTracking] = useState(null);
+
+    const targetBookingId = locationState.state?.bookingId;
+
+    React.useEffect(() => {
+        if (targetBookingId && panditBookings && panditBookings.length > 0) {
+            const found = panditBookings.find(b => b._id === targetBookingId);
+            if (found) {
+                setSelectedBookingForTracking(found);
+            }
+        }
+    }, [targetBookingId, panditBookings]);
 
     // Notifications State
     const [notifications, setNotifications] = useState([]);

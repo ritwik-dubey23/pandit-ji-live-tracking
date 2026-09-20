@@ -45,6 +45,20 @@ export const markAllAsRead = async (req, res) => {
     }
 };
 
+export const deleteNotification = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const notification = await Notification.findOneAndDelete({ _id: id, recipient: req.userId });
+        if (!notification) {
+            return res.status(404).json({ message: "Notification not found." });
+        }
+        const unreadCount = await Notification.countDocuments({ recipient: req.userId, isRead: false });
+        return res.status(200).json({ message: "Notification dismissed successfully", id, unreadCount });
+    } catch (error) {
+        return res.status(500).json({ message: "Error deleting notification." });
+    }
+};
+
 // Internal Helper Function to Create and Broadcast Notifications over Socket.IO
 export const createAndEmitNotification = async ({ recipientId, senderId, title, message, type, bookingId, data }) => {
     try {

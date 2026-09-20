@@ -18,14 +18,19 @@ function ServiceCard({ service, onBookService }) {
     const handleOpenDetails = () => {
         if (service._id) {
             navigate(`/service/${service._id}`);
+        } else if (service.name) {
+            navigate(`/service/${encodeURIComponent(service.name)}`);
         }
     };
 
     return (
-        <div className="bg-white rounded-2xl border border-orange-100 p-5 shadow-sm hover:border-orange-300 hover:shadow-xl transition-all duration-200 flex flex-col justify-between group">
+        <div
+            onClick={handleOpenDetails}
+            className="bg-white rounded-2xl border border-orange-100 p-5 shadow-sm hover:border-orange-400 hover:shadow-xl transition-all duration-200 flex flex-col justify-between group cursor-pointer"
+        >
             <div>
                 {/* Header & Pricing */}
-                <div className="flex items-start justify-between gap-3 cursor-pointer" onClick={handleOpenDetails}>
+                <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-2.5">
                         <div className="w-9 h-9 rounded-xl bg-orange-100 text-[#ff4d2d] flex items-center justify-center font-bold shrink-0">
                             <FaPrayingHands size={18} />
@@ -40,7 +45,10 @@ function ServiceCard({ service, onBookService }) {
                     <div className="mt-4 space-y-2">
                         {/* Primary Banner Photo */}
                         <div
-                            onClick={() => setSelectedPhoto(uniquePhotos[0])}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedPhoto(uniquePhotos[0]);
+                            }}
                             className="relative h-40 w-full rounded-xl overflow-hidden bg-orange-50 border border-orange-100 cursor-pointer group"
                         >
                             <img
@@ -60,7 +68,10 @@ function ServiceCard({ service, onBookService }) {
                                     <button
                                         type="button"
                                         key={pIdx}
-                                        onClick={() => setSelectedPhoto(pUrl)}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setSelectedPhoto(pUrl);
+                                        }}
                                         className="w-12 h-12 rounded-lg overflow-hidden border border-orange-200 shrink-0 cursor-pointer hover:ring-2 hover:ring-[#ff4d2d] transition"
                                     >
                                         <img src={pUrl} alt={`service-photo-${pIdx}`} className="w-full h-full object-cover" />
@@ -88,7 +99,11 @@ function ServiceCard({ service, onBookService }) {
             </div>
 
             <button
-                onClick={() => onBookService(service)}
+                type="button"
+                onClick={(e) => {
+                    e.stopPropagation();
+                    if (onBookService) onBookService(service);
+                }}
                 className="w-full mt-5 py-3 rounded-xl text-xs font-black text-white shadow-md hover:bg-[#e64323] transition duration-200 cursor-pointer min-h-[44px]"
                 style={{ backgroundColor: primaryColor }}
             >

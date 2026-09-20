@@ -5,7 +5,7 @@ import { IoIosSearch } from "react-icons/io";
 import { FaSearch, FaBars, FaBell, FaVolumeUp, FaVolumeMute, FaCheckDouble } from "react-icons/fa";
 import { LuReceiptIndianRupee } from "react-icons/lu";
 import { useDispatch, useSelector } from "react-redux";
-import { setUserData, markNotificationReadInState, markAllNotificationsReadInState, setSoundEnabledState } from "../redux/userSlice";
+import { setUserData, markNotificationReadInState, markAllNotificationsReadInState, removeNotificationFromState, setSoundEnabledState } from "../redux/userSlice";
 import { useNavigate } from "react-router-dom";
 import useNotifications from "../hooks/useNotifications";
 import ArrivalNotificationToast from "./ArrivalNotificationToast";
@@ -20,12 +20,42 @@ function Navbar({ searchQuery = "", setSearchQuery = () => {}, onSearchSubmit = 
   // Initialize notifications & real-time listeners
   useNotifications();
 
+  const { panditsList } = useSelector(state => state.pandit || { panditsList: [] });
   const isUser = userData?.role === "user";
   const isPandit = userData?.role === "pandit";
 
   const [showMenu, setShowMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showMobileSearch, setShowMobileSearch] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  // Default services catalog for fallback suggestions
+  const catalogServices = [
+    { name: "Satyanarayan Puja", price: 1100 },
+    { name: "Griha Pravesh", price: 2100 },
+    { name: "Ganesh Puja", price: 750 },
+    { name: "Maha Mrityunjaya Havan", price: 2100 },
+    { name: "Vivah Sanskar", price: 5100 },
+    { name: "Laxmi Kuber Puja", price: 1100 },
+    { name: "Rudrabhishek", price: 1800 },
+    { name: "Vastu Shanti", price: 3100 }
+  ];
+
+  const qTrim = (searchQuery || "").trim().toLowerCase();
+
+  const filteredServices = catalogServices.filter(s =>
+    s.name.toLowerCase().includes(qTrim) ||
+    (qTrim.includes("satya") && s.name.includes("Satyanarayan")) ||
+    (qTrim.includes("grih") && s.name.includes("Griha")) ||
+    (qTrim.includes("ganesh") && s.name.includes("Ganesh")) ||
+    (qTrim.includes("havan") && s.name.includes("Havan")) ||
+    (qTrim.includes("vivah") && s.name.includes("Vivah"))
+  );
+
+  const filteredPandits = (panditsList || []).filter(p =>
+    p.name.toLowerCase().includes(qTrim) ||
+    (p.city && p.city.toLowerCase().includes(qTrim))
+  );
 
   const handleLogOut = async () => {
     try {
@@ -42,6 +72,32 @@ function Navbar({ searchQuery = "", setSearchQuery = () => {}, onSearchSubmit = 
       dispatch(setUserData(null));
       setShowMenu(false);
       navigate("/signin", { replace: true });
+    }
+  };
+
+  const handleDismissNotification = async (e, notifId) => {
+    e.stopPropagation();
+    dispatch(removeNotificationFromState(notifId));
+    try {
+      await axios.delete(`${serverUrl}/api/notifications/${notifId}`, { withCredentials: true });
+    } catch (err) {
+      console.error("Failed to dismiss notification from DB:", err.message);
+    }
+  };
+
+  const handleNotificationClick = async (notif) => {
+    if (!notif.isRead) {
+      handleMarkAsRead(notif._id);
+    }
+    setShowNotifications(false);
+
+    const targetBookingId = notif.bookingId || notif.data?.bookingId;
+    const isChatType = notif.type === "chat_message" || notif.type === "message";
+
+    if (isPandit) {
+      navigate("/pandit-dashboard", { state: { bookingId: targetBookingId, openChat: isChatType } });
+    } else {
+      navigate("/my-bookings", { state: { bookingId: targetBookingId, openChat: isChatType } });
     }
   };
 
@@ -236,8 +292,8 @@ function Navbar({ searchQuery = "", setSearchQuery = () => {}, onSearchSubmit = 
           <h1 className="text-3xl font-black text-[#ff4d2d] tracking-tight">Maharaj Ji</h1>
         </div>
 
-        {/* SINGLE FUNCTIONAL NAVBAR SEARCH BAR WITH VISIBLE SEARCH ICON BUTTON */}
-        <form onSubmit={handleSearchFormSubmit} className="flex-1 flex justify-center max-w-[580px]">
+        {/* SINGLE FUNCTIONAL NAVBAR SEARCH BAR WITH VISIBLE SEARCH ICON & CATEGORIZED SUGGESTIONS */}
+        <form onSubmit={handleSearchFormSubmit} className="flex-1 flex justify-center max-w-[580px] relative">
           <div className="w-full h-[52px] bg-white shadow-md rounded-2xl flex items-center border border-gray-200 overflow-hidden focus-within:border-[#ff4d2d] transition">
             <div className="px-4 border-r border-gray-200 flex items-center gap-1.5 text-sm font-bold text-gray-700 bg-gray-50/50 h-full shrink-0">
               <IoLocationSharp className="text-[#ff4d2d] text-lg" />
@@ -249,7 +305,11 @@ function Navbar({ searchQuery = "", setSearchQuery = () => {}, onSearchSubmit = 
                 type="text"
                 placeholder="Search Pandit Ji, Hawan, Satyanarayan Puja..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setShowSuggestions(true);
+                }}
+                onFocus={() => setShowSuggestions(true)}
                 className="flex-1 outline-none text-sm font-semibold text-gray-800"
               />
               <button
@@ -261,6 +321,79 @@ function Navbar({ searchQuery = "", setSearchQuery = () => {}, onSearchSubmit = 
               </button>
             </div>
           </div>
+
+          {/* Categorized Autocomplete Suggestions Dropdown */}
+          {showSuggestions && searchQuery.trim().length > 0 && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setShowSuggestions(false)} />
+              <div className="absolute top-14 left-0 right-0 bg-white rounded-2xl shadow-2xl border border-orange-100 p-3 z-50 max-h-[320px] overflow-y-auto space-y-3">
+                {/* Services Suggestions */}
+                {filteredServices.length > 0 && (
+                  <div>
+                    <span className="text-[10px] font-black uppercase text-[#ff4d2d] tracking-wider px-2 block mb-1">
+                      🕉️ Services
+                    </span>
+                    <div className="space-y-1">
+                      {filteredServices.slice(0, 4).map((s, i) => (
+                        <div
+                          key={i}
+                          onClick={() => {
+                            setSearchQuery(s.name);
+                            setShowSuggestions(false);
+                            if (onSearchSubmit) onSearchSubmit(s.name);
+                          }}
+                          className="flex items-center justify-between p-2 rounded-xl hover:bg-orange-50 cursor-pointer transition text-xs font-bold text-gray-800"
+                        >
+                          <span className="truncate">{s.name}</span>
+                          <span className="text-[10px] text-gray-400 font-extrabold shrink-0 bg-gray-100 px-2 py-0.5 rounded-md">
+                            ₹{s.price || 999}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Pandits Suggestions */}
+                {filteredPandits.length > 0 && (
+                  <div className="pt-2 border-t border-gray-100">
+                    <span className="text-[10px] font-black uppercase text-[#ff4d2d] tracking-wider px-2 block mb-1">
+                      👤 Pandit Ji
+                    </span>
+                    <div className="space-y-1">
+                      {filteredPandits.slice(0, 4).map((p, i) => (
+                        <div
+                          key={i}
+                          onClick={() => {
+                            setSearchQuery(p.name);
+                            setShowSuggestions(false);
+                            if (onSearchSubmit) onSearchSubmit(p.name);
+                          }}
+                          className="flex items-center gap-2.5 p-2 rounded-xl hover:bg-orange-50 cursor-pointer transition text-xs font-bold text-gray-800"
+                        >
+                          <img
+                            src={p.profileImage || "/logo.png"}
+                            alt={p.name}
+                            className="w-7 h-7 rounded-full object-cover border border-orange-300 shrink-0"
+                          />
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate font-extrabold text-gray-900">{p.name}</div>
+                            <div className="text-[10px] text-gray-400 font-semibold truncate">{p.city} • {p.experienceYears || 5}+ yrs exp</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {filteredServices.length === 0 && filteredPandits.length === 0 && (
+                  <div className="text-center py-3 text-xs text-gray-400 font-semibold">
+                    Press Enter to search for "{searchQuery}"
+                  </div>
+                )}
+              </div>
+            </>
+          )}
         </form>
 
         {/* RIGHT SIDE DESKTOP ACTIONS */}
@@ -398,21 +531,40 @@ function Navbar({ searchQuery = "", setSearchQuery = () => {}, onSearchSubmit = 
                 notifications.map((notif) => (
                   <div
                     key={notif._id}
-                    onClick={() => handleMarkAsRead(notif._id)}
-                    className={`pt-2.5 pb-2 px-2.5 rounded-2xl cursor-pointer transition ${
-                      !notif.isRead ? "bg-orange-50/80 border border-orange-100" : "hover:bg-gray-50"
+                    onClick={() => handleNotificationClick(notif)}
+                    className={`pt-2.5 pb-2 px-3 rounded-2xl cursor-pointer transition relative group border ${
+                      !notif.isRead ? "bg-orange-50/90 border-orange-200 shadow-xs" : "bg-white border-gray-100 hover:bg-gray-50"
                     }`}
                   >
                     <div className="flex items-start justify-between gap-2">
-                      <h4 className="text-xs font-black text-gray-900">{notif.title}</h4>
-                      {!notif.isRead && (
-                        <span className="w-2 h-2 rounded-full bg-[#ff4d2d] shrink-0 mt-1"></span>
-                      )}
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        {!notif.isRead && (
+                          <span className="w-2 h-2 rounded-full bg-[#ff4d2d] shrink-0 animate-pulse"></span>
+                        )}
+                        <h4 className="text-xs font-black text-gray-900 truncate">{notif.title}</h4>
+                      </div>
+
+                      {/* ✕ DISMISS BUTTON */}
+                      <button
+                        type="button"
+                        onClick={(e) => handleDismissNotification(e, notif._id)}
+                        className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg cursor-pointer transition shrink-0 ml-1"
+                        title="Dismiss notification"
+                      >
+                        <IoClose size={16} />
+                      </button>
                     </div>
-                    <p className="text-[11px] text-gray-600 font-medium mt-0.5 leading-snug">{notif.message}</p>
-                    <span className="text-[9px] font-semibold text-gray-400 block mt-1">
-                      {new Date(notif.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </span>
+
+                    <p className="text-[11px] text-gray-600 font-medium mt-1 leading-snug break-words">{notif.message}</p>
+                    
+                    <div className="flex items-center justify-between mt-1.5 pt-1 border-t border-gray-100/60">
+                      <span className="text-[9px] font-semibold text-gray-400">
+                        {new Date(notif.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                      <span className="text-[9px] font-extrabold text-[#ff4d2d] group-hover:underline">
+                        Tap to open →
+                      </span>
+                    </div>
                   </div>
                 ))
               )}

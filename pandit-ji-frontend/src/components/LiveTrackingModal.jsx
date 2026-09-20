@@ -42,9 +42,37 @@ function LiveTrackingModal({ booking, currentUserRole, onClose, onStatusUpdated 
     const [bookingStatus, setBookingStatus] = useState(booking.status || "accepted");
     const [chatOpen, setChatOpen] = useState(false);
     const [chatMessages, setChatMessages] = useState([
-        { sender: "pandit", text: "Namaste! I am on my way with all necessary Pooja Samagri." }
+        { id: "default_welcome", sender: "pandit", text: "Namaste! I am on my way with all necessary Pooja Samagri." }
     ]);
     const [newMessage, setNewMessage] = useState("");
+    const messagesEndRef = useRef(null);
+
+    // Fetch persisted chat messages from DB on load
+    useEffect(() => {
+        const fetchMessages = async () => {
+            try {
+                const res = await axios.get(`${serverUrl}/api/booking/${booking._id}/messages`, { withCredentials: true });
+                if (Array.isArray(res.data) && res.data.length > 0) {
+                    const formatted = res.data.map(m => ({
+                        id: m._id || m.id,
+                        sender: m.senderRole,
+                        text: m.text,
+                        createdAt: m.createdAt
+                    }));
+                    setChatMessages(formatted);
+                }
+            } catch (err) {
+                console.warn("Could not fetch messages history:", err?.message);
+            }
+        };
+        fetchMessages();
+    }, [booking._id]);
+
+    useEffect(() => {
+        if (messagesEndRef.current) {
+            messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+    }, [chatMessages, chatOpen]);
 
     // 1. Live Geolocation Detection with enableHighAccuracy & Indore Fallback
     useEffect(() => {
@@ -235,36 +263,47 @@ function LiveTrackingModal({ booking, currentUserRole, onClose, onStatusUpdated 
         }
     };
 
-    const handleSendMessage = (e) => {
+    const handleSendMessage = async (e) => {
         e.preventDefault();
         if (!newMessage.trim()) return;
         const msgText = newMessage.trim();
-
-        const newMsg = {
-            id: Date.now().toString() + Math.random().toString(36).substring(2, 5),
-            sender: currentUserRole,
-            text: msgText,
-            createdAt: new Date().toISOString()
-        };
-
-        setChatMessages(prev => [...prev, newMsg]);
         setNewMessage("");
         playChatMessageSentSound();
 
-        let recipientId = null;
-        if (currentUserRole === "pandit") {
-            recipientId = typeof booking.user === 'object' ? booking.user?._id : booking.user;
-        } else {
-            const pUser = booking.pandit?.user;
-            recipientId = typeof pUser === 'object' ? pUser?._id : (pUser || booking.pandit?._id);
-        }
+        try {
+            const res = await axios.post(`${serverUrl}/api/booking/${booking._id}/messages`, {
+                text: msgText
+            }, { withCredentials: true });
 
-        socket.emit("send_chat_message", {
-            bookingId: booking._id,
-            text: msgText,
-            senderRole: currentUserRole,
-            recipientId
-        });
+            if (res.data) {
+                const createdMsg = {
+                    id: res.data._id || res.data.id,
+                    sender: currentUserRole,
+                    text: res.data.text,
+                    createdAt: res.data.createdAt
+                };
+                setChatMessages(prev => {
+                    if (prev.some(m => m.id === createdMsg.id || (m.text === createdMsg.text && m.sender === createdMsg.sender))) return prev;
+                    return [...prev, createdMsg];
+                });
+            }
+        } catch (err) {
+            console.warn("REST send message error, fallback to socket:", err.message);
+            let recipientId = null;
+            if (currentUserRole === "pandit") {
+                recipientId = typeof booking.user === 'object' ? booking.user?._id : booking.user;
+            } else {
+                const pUser = booking.pandit?.user;
+                recipientId = typeof pUser === 'object' ? pUser?._id : (pUser || booking.pandit?._id);
+            }
+
+            socket.emit("send_chat_message", {
+                bookingId: booking._id,
+                text: msgText,
+                senderRole: currentUserRole,
+                recipientId
+            });
+        }
     };
 
     const handleOpenGoogleMaps = () => {
@@ -388,7 +427,7 @@ function LiveTrackingModal({ booking, currentUserRole, onClose, onStatusUpdated 
                             <div className="overflow-y-auto space-y-2 pr-1 text-xs">
                                 {chatMessages.map((msg, idx) => (
                                     <div
-                                        key={idx}
+                                        key={msg.id || idx}
                                         className={`p-2.5 rounded-xl max-w-[80%] font-medium ${
                                             msg.sender === currentUserRole
                                                 ? "bg-[#ff4d2d] text-white ml-auto rounded-br-none"
@@ -398,6 +437,7 @@ function LiveTrackingModal({ booking, currentUserRole, onClose, onStatusUpdated 
                                         {msg.text}
                                     </div>
                                 ))}
+                                <div ref={messagesEndRef} />
                             </div>
                             <form onSubmit={handleSendMessage} className="flex gap-2 mt-2">
                                 <input

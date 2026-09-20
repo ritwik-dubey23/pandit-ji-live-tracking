@@ -59,7 +59,7 @@ function Footer() {
                         </li>
                         <li className="flex items-center gap-2.5">
                             <FaEnvelope className="text-amber-400 shrink-0" size={13} />
-                            <a href="mailto:support@maharajji.com" className="hover:text-amber-400">support@maharajji.com</a>
+                            <a href="mailto:supportmaharajji@gmail.com" className="font-extrabold text-amber-400 hover:underline break-all">supportmaharajji@gmail.com</a>
                         </li>
                     </ul>
                 </div>

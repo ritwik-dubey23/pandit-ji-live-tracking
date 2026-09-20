@@ -57,6 +57,14 @@ const userSlice = createSlice({
             state.notifications.forEach(n => { n.isRead = true; });
             state.unreadCount = 0;
         },
+        removeNotificationFromState: (state, action) => {
+            const id = action.payload;
+            const notif = state.notifications.find(n => n._id === id);
+            if (notif && !notif.isRead) {
+                state.unreadCount = Math.max(0, state.unreadCount - 1);
+            }
+            state.notifications = state.notifications.filter(n => n._id !== id);
+        },
         setSoundEnabledState: (state, action) => {
             state.soundEnabled = action.payload;
             localStorage.setItem("pandit_ji_sound_enabled", action.payload ? "true" : "false");
@@ -80,6 +88,7 @@ export const {
     addNotification,
     markNotificationReadInState,
     markAllNotificationsReadInState,
+    removeNotificationFromState,
     setSoundEnabledState,
     setArrivalPopup,
     clearArrivalPopup

@@ -1,15 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
+import { useLocation } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import UserBookingCard from '../components/UserBookingCard';
+import LiveTrackingModal from '../components/LiveTrackingModal';
 import useGetMyBookings from '../hooks/useGetMyBookings';
 import { FaCalendarAlt, FaHands } from 'react-icons/fa';
 
 function MyBookings() {
     useGetMyBookings();
+    const locationState = useLocation();
 
     const { myBookings } = useSelector(state => state.user);
     const [statusFilter, setStatusFilter] = useState("all");
+    const [selectedBookingForTracking, setSelectedBookingForTracking] = useState(null);
+
+    const targetBookingId = locationState.state?.bookingId;
+
+    useEffect(() => {
+        if (targetBookingId && myBookings && myBookings.length > 0) {
+            const found = myBookings.find(b => b._id === targetBookingId);
+            if (found) {
+                setSelectedBookingForTracking(found);
+            }
+        }
+    }, [targetBookingId, myBookings]);
 
     const filteredBookings = myBookings.filter(b => {
         if (statusFilter === "all") return true;
@@ -63,6 +78,14 @@ function MyBookings() {
                     </div>
                 )}
             </div>
+
+            {selectedBookingForTracking && (
+                <LiveTrackingModal
+                    booking={selectedBookingForTracking}
+                    currentUserRole="user"
+                    onClose={() => setSelectedBookingForTracking(null)}
+                />
+            )}
         </div>
     );
 }

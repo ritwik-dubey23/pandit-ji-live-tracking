@@ -1,5 +1,6 @@
 import { Server } from "socket.io";
 import Booking from "./models/booking.model.js";
+import Message from "./models/message.model.js";
 
 let io;
 
@@ -155,15 +156,38 @@ export const initSocket = (server) => {
         // Real-Time In-App Chat Messaging Handler (Chat messages belong strictly inside Tracking Modal Chat)
         socket.on("send_chat_message", async (data) => {
             try {
-                const { bookingId, text, senderRole, recipientId } = data;
+                const { bookingId, text, senderRole, recipientId, senderId } = data;
                 if (!bookingId || !text) return;
 
+                const booking = await Booking.findById(bookingId).populate("pandit");
+                if (!booking) return;
+
+                let actualSender = senderId;
+                if (!actualSender) {
+                    actualSender = senderRole === "pandit" ? booking.pandit?.user : booking.user;
+                }
+
+                // Persist message to DB if not already created
+                let dbMsg = null;
+                if (actualSender) {
+                    dbMsg = await Message.create({
+                        booking: bookingId,
+                        sender: actualSender,
+                        senderRole: senderRole || "user",
+                        text: text.trim()
+                    });
+                }
+
+                const msgId = dbMsg ? dbMsg._id.toString() : (Date.now().toString() + Math.random().toString(36).substring(2, 5));
+
                 const messagePayload = {
-                    id: Date.now().toString() + Math.random().toString(36).substring(2, 5),
+                    _id: msgId,
+                    id: msgId,
                     bookingId,
-                    text,
-                    senderRole,
-                    createdAt: new Date().toISOString()
+                    text: text.trim(),
+                    senderRole: senderRole || "user",
+                    sender: actualSender,
+                    createdAt: dbMsg ? dbMsg.createdAt.toISOString() : new Date().toISOString()
                 };
 
                 console.log(`[SOCKET SERVER] Chat message for booking_${bookingId}: ${text}`);
@@ -175,19 +199,16 @@ export const initSocket = (server) => {
                 }
 
                 // Broadcast to DB-associated user and pandit rooms to guarantee instant delivery
-                const booking = await Booking.findById(bookingId).populate("pandit");
-                if (booking) {
-                    if (booking.user) {
-                        io.to(`user_${booking.user.toString()}`).emit("receive_chat_message", messagePayload);
-                    }
-                    if (booking.pandit?.user) {
-                        const pUserId = booking.pandit.user.toString();
-                        io.to(`pandit_${pUserId}`).emit("receive_chat_message", messagePayload);
-                        io.to(`user_${pUserId}`).emit("receive_chat_message", messagePayload);
-                    }
-                    if (booking.pandit?._id) {
-                        io.to(`pandit_${booking.pandit._id.toString()}`).emit("receive_chat_message", messagePayload);
-                    }
+                if (booking.user) {
+                    io.to(`user_${booking.user.toString()}`).emit("receive_chat_message", messagePayload);
+                }
+                if (booking.pandit?.user) {
+                    const pUserId = booking.pandit.user.toString();
+                    io.to(`pandit_${pUserId}`).emit("receive_chat_message", messagePayload);
+                    io.to(`user_${pUserId}`).emit("receive_chat_message", messagePayload);
+                }
+                if (booking.pandit?._id) {
+                    io.to(`pandit_${booking.pandit._id.toString()}`).emit("receive_chat_message", messagePayload);
                 }
             } catch (err) {
                 console.error("Error in send_chat_message:", err.message);

@@ -122,10 +122,11 @@ export function ContactPage() {
                     </div>
                     <div className="p-5 bg-orange-50/50 rounded-2xl border border-orange-100 space-y-2">
                         <FaEnvelope className="mx-auto text-[#ff4d2d]" size={24} />
-                        <h4 className="font-bold text-sm text-gray-900">Email</h4>
-                        <a href="mailto:support@maharajji.com" className="text-xs font-bold text-gray-800 hover:text-[#ff4d2d] block">
-                            support@maharajji.com
+                        <h4 className="font-bold text-sm text-gray-900">Email Support</h4>
+                        <a href="mailto:supportmaharajji@gmail.com" className="text-xs font-extrabold text-[#ff4d2d] hover:underline block break-all">
+                            supportmaharajji@gmail.com
                         </a>
+                        <span className="text-[10px] text-gray-500 font-bold block">(Tap to Send Email)</span>
                     </div>
                     <div className="p-5 bg-orange-50/50 rounded-2xl border border-orange-100 space-y-2">
                         <FaMapMarkerAlt className="mx-auto text-[#ff4d2d]" size={24} />
